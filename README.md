@@ -25,3 +25,6 @@ ATTENTION: if you run program when there is already an "output.png" file, it wil
 
 #### POSSIBLE COMMANDS:
 grayscale [imagePath]
+only_red [imagePath]
+blue [imagePath]
+only_green [imagePath]

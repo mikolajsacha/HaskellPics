@@ -14,7 +14,7 @@ import qualified Data.Array.Repa as R
 import Data.Array.Repa (U, D, Z (..), (:.)(..))
 import Data.Char (toLower)
 import PixelMaps
-import JuicyRepa (RGB8, fromImage, toImage)
+import JuicyRepa
 
 outputPath = "output.png"
 
@@ -40,10 +40,14 @@ runCommandHandleExceptions cmd params =
 runCommand :: String -> [String] -> MaybeT IO ()
 runCommand cmd args =
   case map toLower cmd of
-    "grayscale" -> runImageMap grayscale $ head args
+    "grayscale" -> simpleMap grayscale
+    "only_red" -> simpleMap onlyRed
+    "only_green" -> simpleMap onlyGreen
+    "only_blue" -> simpleMap onlyBlue
     _ -> do 
       liftIO $ putStrLn $ "Unknown command: " ++ cmd
       MaybeT $ return Nothing
+    where simpleMap f = runImageMap f $ head args
 
 runImageMap :: ((R.DIM2 -> RGB8) -> R.DIM2 -> RGB8) -> FilePath -> MaybeT IO ()
 runImageMap fun imgPath = do

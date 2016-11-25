@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeOperators   #-}
 
-module PixelMaps (grayscale) where
+module PixelMaps (grayscale, onlyRed, onlyGreen, onlyBlue) where
 
 import Control.Monad
 import Control.Monad.Trans
@@ -10,12 +10,22 @@ import Data.Array.Repa (U, D, Z (..), (:.)(..))
 import qualified Data.Array.Repa as R
 import JuicyRepa (RGB8)
 
-grayscale :: (R.DIM2 -> RGB8) -> R.DIM2 -> RGB8
+-- all functions here have type signature:
+-- f :: (R.DIM2 -> RGB8) -> R.DIM2 -> RGB8
+--
 grayscale f (Z :. i :. j) = 
   (avg, avg, avg) 
-  where (a, b, c) = f (Z :. i :. j)
-        a' = fromIntegral a
+  where (r, g, b) = f (Z :. i :. j)
+        r' = fromIntegral r
+        g' = fromIntegral g
         b' = fromIntegral b
-        c' = fromIntegral c
-        avg = round ((a' + b' + c') / 3)
+        avg = round ((r' + g' + b') / 3)
         
+onlyRed f (Z :. i :. j) = 
+  (r, 0, 0) where (r, g, b) = f (Z :. i :. j)
+
+onlyGreen f (Z :. i :. j) = 
+  (0, g, 0) where (r, g, b) = f (Z :. i :. j)
+
+onlyBlue f (Z :. i :. j) = 
+  (0, 0, b) where (r, g, b) = f (Z :. i :. j)
