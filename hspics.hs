@@ -40,17 +40,16 @@ runCommandHandleExceptions cmd params =
 runCommand :: String -> [String] -> MaybeT IO ()
 runCommand cmd args =
   case map toLower cmd of
-    "grayscale" -> do 
-      img <- readImg $ head args
-      liftIO $ runImageMapCommand grayscale img
+    "grayscale" -> runImageMap grayscale $ head args
     _ -> do 
       liftIO $ putStrLn $ "Unknown command: " ++ cmd
       MaybeT $ return Nothing
 
-runImageMapCommand :: ((R.DIM2 -> RGB8) -> R.DIM2 -> RGB8) -> Image PixelRGB8 -> IO ()
-runImageMapCommand fun img = do
-  computed <- R.computeUnboxedP (R.traverse (fromImage img) id fun)
-  (savePngImage outputPath . ImageRGB8 . toImage) computed
+runImageMap :: ((R.DIM2 -> RGB8) -> R.DIM2 -> RGB8) -> FilePath -> MaybeT IO ()
+runImageMap fun imgPath = do
+  img <- readImg imgPath
+  computed <- liftIO $ R.computeUnboxedP (R.traverse (fromImage img) id fun)
+  liftIO $ (savePngImage outputPath . ImageRGB8 . toImage) computed
 
 readImg :: FilePath -> MaybeT IO (Image PixelRGB8)
 readImg path = do
