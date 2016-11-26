@@ -4,7 +4,8 @@ module PixelMaps (grayscale,
                   onlyRed, onlyGreen, onlyBlue,
                   negative, sepia,
                   onlyY, onlyCb, onlyCr,
-                  onlyH, onlyL, onlyS) where
+                  onlyH, onlyL, onlyS,
+                  filterHue) where
 
 import Control.Monad
 import Control.Monad.Trans
@@ -16,7 +17,7 @@ import Pixel
 import qualified YCbCr as Ycbcr
 import qualified HLS as Hls
 
--- all functions here have type signatures:
+-- all functions below have type signatures:
 -- f :: (R.DIM2 -> RGB8) -> R.DIM2 -> RGB8
 
 grayscale f (Z :. i :. j) = 
@@ -53,3 +54,11 @@ onlyL f (Z :. i :. j) = Hls.fromHls (0, l, 0)
 
 onlyS f (Z :. i :. j) = Hls.fromHls (h, 0.5, s)
   where (h, l, s) = Hls.toHls $ f (Z :. i :. j)
+
+filterHue :: Double -> Double -> (R.DIM2 -> RGB8) -> R.DIM2 -> RGB8
+filterHue minHue maxHue f (Z :. i :. j)
+  | s < 0.1          = black
+  | minHue <= maxHue = if h >= minHue && h <= maxHue then Hls.fromHls (h, l, s) else black 
+  | otherwise        = if h >= minHue || h <= maxHue then Hls.fromHls (h, l, s) else black
+  where (h, l, s) = Hls.toHls $ f (Z :. i :. j)
+        black = (0,0,0)
