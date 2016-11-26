@@ -1,11 +1,10 @@
 -- this transformations are already implemented in JuicyPixels. I write them as an exercise
 
-module ColorSpaces (RGB8, y, cb, cr) where
+module YCbCr (RGB8, y, cb, cr, r, g, b) where
 
 import Codec.Picture (Pixel8)
 import Pixel
 
-type RGB8 = (Pixel8, Pixel8, Pixel8)
 type YCbCr = (Double, Double, Double)
 type ConvFactors = (Double, Double, Double)
 

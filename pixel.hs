@@ -1,5 +1,9 @@
--- basic functions for operating on single pixel
-module Pixel (fromIntegral', round', assertBounded, assertBounded') where
+-- basic functions for operating on a single pixel
+module Pixel (RGB8, fromIntegral', round', assertBounded, assertBounded') where
+
+import Codec.Picture (Pixel8)
+
+type RGB8 = (Pixel8, Pixel8, Pixel8)
 
 -- functions with ' are equivalents of other functions working on RGB8 tuple
 
