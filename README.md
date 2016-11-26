@@ -33,8 +33,11 @@ negative [imagePath]
 sepia [imagePah] 
 
 ##### YCbCr color coordinates: 
+only_y [imagePath]  
+only_cb [imagePath]  
+only_cr [imagePath]  
 
-##### HSL color coordinates: 
-only_h [imagePath]  <-- uses only h, sets s=0.5 and l=0.5
-only_s [imagePath]  <-- uses h and s, sets l=0.5
-only_l [imagePath]  <-- uses only l, sets h=0, s=0
+##### HSL color coordinates:  
+only_h [imagePath]  <-- uses only h, sets s=0.5 and l=0.5  
+only_s [imagePath]  <-- uses h and s, sets l=0.5  
+only_l [imagePath]  <-- uses only l, sets h=0, s=0  
