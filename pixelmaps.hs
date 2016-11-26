@@ -45,7 +45,7 @@ onlyCb f (Z :. i :. j) = Ycbcr.fromYcbcr (128, cb, 0.0)
 onlyCr f (Z :. i :. j) = Ycbcr.fromYcbcr (128, 0.0, cr)
   where (y, cb, cr) = Ycbcr.toYcbcr $ f (Z :. i :. j)
 
-onlyH f (Z :. i :. j) = Hls.fromHls (h, l, s)
+onlyH f (Z :. i :. j) = Hls.fromHls (h, 0.5, 0.5)
   where (h, l, s) = Hls.toHls $ f (Z :. i :. j)
 
 onlyL f (Z :. i :. j) = Hls.fromHls (0, l, 0)

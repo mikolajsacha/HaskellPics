@@ -9,6 +9,12 @@ normalizeRgb :: RGB8 -> (Double, Double, Double)
 normalizeRgb rgb = (r / 255.0, g / 255.0, b / 255.0)
   where (r, g, b) = fromIntegral' rgb
 
+unpackCoord :: Double -> Pixel8
+unpackCoord x = (assertBounded . round) (x * 255.0)
+
+unpackRgb :: HLS -> RGB8
+unpackRgb (r, g, b) = (unpackCoord r, unpackCoord g, unpackCoord b)
+
 h :: RGB8 -> Double
 h rgb = h' where (h', l', s') = toHls rgb
 
@@ -42,18 +48,22 @@ toHls rgb = (h', l', s')
            | otherwise = 60.0 * ((r - g) / d + 4.0)
 
 fromHls :: HLS -> RGB8
-fromHls (h, l, s)
-  | h' < 1 = normalize (c, x, 0)
-  | h' < 2 = normalize (x, c, 0)
-  | h' < 3 = normalize (0, c, x)
-  | h' < 4 = normalize (0, x, c)
-  | h' < 5 = normalize (x, 0, c)
-  | otherwise = normalize (c, 0, x) 
-  where c = (1.0 - abs (2.0 * l - 1.0)) * s
-        h' = floor (h / 60.0)
-        x = c * fromIntegral (1 - abs (h' `mod` 2 - 1))
-        m = l - c * 0.5
-        addm a = round (255.0 * (a + m))
-        normalize (a, b, c) = assertBounded' (addm a, addm b, addm c)
+fromHls (h, l, s) = unpackRgb (r, g, b)
+  where hue2rgb p q t  
+          | t' < 1.0/6.0 = p + (q - p) * 6.0 * t'
+          | t' < 1.0/2.0 = q
+          | t' < 2.0/3.0 = p + (q - p) * (2.0/3.0 - t') * 6.0
+          | otherwise = p
+          where t' | t < 0 = t + 1
+                   | t > 1 = t - 1
+                   | otherwise = t
+        q' | l < 0.5 = l * (1.0 + s)
+           | otherwise = l + s - l * s 
+        p' = 2 * l - q'
+        r = hue2rgb p' q' (h/360.0 + 1.0/3.0)
+        g = hue2rgb p' q' (h/360.0)
+        b = hue2rgb p' q' (h/360.0 - 1.0/3.0)
+  
+
 
 

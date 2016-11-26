@@ -22,9 +22,19 @@ ATTENTION: if you run program when there is already an "output.png" file, it wil
 
 
 #### POSSIBLE COMMANDS:
+
+##### Basic color transformations:
+
 grayscale [imagePath]  
 only_red [imagePath]  
 blue [imagePath]  
 only_green [imagePath]  
 negative [imagePath]  
-sepia [imagePah]  
+sepia [imagePah] 
+
+##### YCbCr color coordinates: 
+
+##### HSL color coordinates: 
+only_h [imagePath]  <-- uses only h, sets s=0.5 and l=0.5
+only_s [imagePath]  <-- uses h and s, sets l=0.5
+only_l [imagePath]  <-- uses only l, sets h=0, s=0
