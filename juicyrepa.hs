@@ -8,7 +8,7 @@ module JuicyRepa (RGB8, fromImage, toImage) where
 import Codec.Picture
 import qualified Data.Array.Repa as R
 import Data.Array.Repa (U, D, Z (..), (:.)(..), (!))
-import Pixel (RGB8)
+import ColorSpaces (RGB8)
 
 -- | Produce delayed Repa array from image with true color pixels.
 fromImage :: Image PixelRGB8 -> R.Array D R.DIM2 RGB8

@@ -24,7 +24,7 @@ onlyBlue  f (Z :. i :. j) = (0, 0, b) where (r, g, b) = f (Z :. i :. j)
 negative  f (Z :. i :. j) = (255 - r, 255 - g, 255 - b) where (r, g, b) = f (Z :. i :. j)
 
 sepia f (Z :. i :. j) = 
-    (assertPixel' . round') (r', g', b')
+    (assertBounded' . round') (r', g', b')
     where (r, g, b) = fromIntegral' $ f (Z :. i :. j)
           r' = r * 0.393 + g * 0.769 + b * 0.189
           g' = r * 0.349 + g * 0.686 + b * 0.168
