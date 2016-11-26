@@ -45,7 +45,12 @@ runCommand cmd args =
     "only_green" -> simpleMap onlyGreen
     "only_blue" -> simpleMap onlyBlue
     "negative" -> simpleMap negative
-    "sepia" -> simpleMap sepia
+    "only_y" -> simpleMap onlyY
+    "only_cb" -> simpleMap onlyCb
+    "only_cr" -> simpleMap onlyCr
+    "only_h" -> simpleMap onlyH
+    "only_l" -> simpleMap onlyL
+    "only_s" -> simpleMap onlyS
     _ -> do 
       liftIO $ putStrLn $ "Unknown command: " ++ cmd
       MaybeT $ return Nothing

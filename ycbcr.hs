@@ -1,6 +1,6 @@
 -- this transformations are already implemented in JuicyPixels. I write them as an exercise
 
-module YCbCr (RGB8, y, cb, cr, r, g, b) where
+module YCbCr (YCbCr, toYcbcr, fromYcbcr, y, cb, cr, r, g, b) where
 
 import Codec.Picture (Pixel8)
 import Pixel
@@ -8,29 +8,31 @@ import Pixel
 type YCbCr = (Double, Double, Double)
 type ConvFactors = (Double, Double, Double)
 
-fromRgb :: ConvFactors -> Double -> RGB8 -> Double
-fromRgb (xr, xg, xb) x0 rgb = x0 + (xr * r' + xg * g' + xb * b') / 256.0
-            where (r', g', b') = fromIntegral' rgb
-
-toRgb :: ConvFactors -> Double -> YCbCr -> Pixel8
-toRgb (xy, xcb, xcr) x0 (y', cb', cr') =
-  assertBounded $ round $ x0 + (xy * y' + xcb * cb' + xcr * cr') / 256.0
 
 y :: RGB8 -> Double
-y  = fromRgb ( 65.738, 129.057,  25.064) 16.0
+y rgb = 0.299 * r' + 0.587 * g' + 0.114 * b' 
+  where (r', g', b') = fromIntegral' rgb
 
 cb :: RGB8 -> Double
-cb = fromRgb (-37.945, -74.494, 112.439) 128.0
+cb rgb@(r, g, b) = 0.492 * (b' - y rgb) 
+  where b' = fromIntegral b
 
 cr :: RGB8 -> Double
-cr = fromRgb (112.438, -94.151, -18.285) 128.0
+cr rgb@(r, g, b) = 0.877 * (r' - y rgb) 
+  where r' = fromIntegral r
 
 r :: YCbCr -> Pixel8
-r = toRgb (298.082,      0.0, 408.583) (-222.921)
+r (y, cb, cr) = (assertBounded . round) (y + 1.14 * cr)
 
 g :: YCbCr -> Pixel8
-g = toRgb (298.082, -100.291, 208.120)   135.576
+g (y, cb, cr) = (assertBounded . round) (y - 0.395 * cb - 0.581 * cr)
 
 b :: YCbCr -> Pixel8
-b = toRgb (298.082,  516.412,     0.0) (-276.836)
+b (y, cb, cr) = (assertBounded . round) (y + 2.033 * cb)
+
+toYcbcr :: RGB8 -> YCbCr
+toYcbcr rgb = (y rgb, cb rgb, cr rgb)
+
+fromYcbcr :: YCbCr -> RGB8
+fromYcbcr ycbcr = (r ycbcr, g ycbcr, b ycbcr)
 
