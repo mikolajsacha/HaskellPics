@@ -14,6 +14,7 @@ import qualified Data.Array.Repa as R
 import Data.Array.Repa (U, D, Z (..), (:.)(..))
 import Data.Char (toLower)
 import PixelMaps
+import PixelTraversals
 import JuicyRepa
 
 outputPath = "output.png"
@@ -54,15 +55,27 @@ runCommand cmd args =
     "filter_hue" -> mapImage' (filterHue (read $ args !! 1, read $ args !! 2))
     "filter_skin" -> mapImage' filterSkin
     "filter_red_eyes" -> mapImage' filterRedEyes
+    "average_rgb_filter" -> traverseImage' averageFilter
+    "median_rgb_filter" -> traverseImage' medianFilter
     _ -> do 
       liftIO $ putStrLn $ "Unknown command: " ++ cmd
       MaybeT $ return Nothing
     where mapImage' f = mapImage f $ head args
+          traverseImage' f = traverseImage f $ head args
 
 mapImage :: (RGB8 -> RGB8) -> FilePath -> MaybeT IO ()
 mapImage fun imgPath = do
   img <- readImg imgPath
   computed <- liftIO $ R.computeUnboxedP (R.map fun (fromImage img))
+  liftIO $ (savePngImage outputPath . ImageRGB8 . toImage) computed
+
+traverseImage :: (R.DIM2 -> (R.DIM2 -> RGB8) -> R.DIM2 -> RGB8)
+              -> FilePath -> MaybeT IO ()
+traverseImage fun imgPath = do
+  img <- readImg imgPath
+  let arr = fromImage img
+  let fun' = fun $ R.extent arr
+  computed <- liftIO $ R.computeUnboxedP (R.traverse arr id fun')
   liftIO $ (savePngImage outputPath . ImageRGB8 . toImage) computed
 
 readImg :: FilePath -> MaybeT IO (Image PixelRGB8)

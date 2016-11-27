@@ -41,5 +41,9 @@ only_h [imagePath]  <-- uses only h, sets s=0.5 and l=0.5
 only_s [imagePath]  <-- uses h and s, sets l=0.5  
 only_l [imagePath]  <-- uses only l, sets h=0, s=0  
 filter_hue [imagePath] [minValue] [maxValue]  <-- shows only pixels with hue from given range (hue has values from [0, 360])  
-filter_skin [imagePath]  <-- tries to filter the color of human skin (using HSL color space)  
-filter_red_eyes [imagePath]  <-- tries to filter red eyes on photography  
+filter_skin [imagePath]  <-- filter the color of human skin (using HSL color space)  
+filter_red_eyes [imagePath]  <-- filter red eyes on photography  
+
+##### Noise filters:  
+average_rgb_filter [imagePath]  <-- filter noises using moving average on RGB coordinates  
+median_rgb_filter [imagePath]  <-- filter noises using moving median on RGB coordinates  

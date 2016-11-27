@@ -1,7 +1,11 @@
 -- basic functions for operating on a single pixel
-module Pixel (RGB8, fromIntegral', round', assertBounded, assertBounded', max', min') where
+module Pixel (RGB8, fromIntegral', round', assertBounded, assertBounded', max', min', fst', snd', trd') where
 
 import Codec.Picture (Pixel8)
+
+fst' (a, b, c) = a
+snd' (a, b, c) = b
+trd' (a, b, c) = c
 
 type RGB8 = (Pixel8, Pixel8, Pixel8)
 
