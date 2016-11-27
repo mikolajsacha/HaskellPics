@@ -42,3 +42,4 @@ only_h [imagePath]  <-- uses only h, sets s=0.5 and l=0.5
 only_s [imagePath]  <-- uses h and s, sets l=0.5  
 only_l [imagePath]  <-- uses only l, sets h=0, s=0  
 filter_hue [imagePath] [minValue] [maxValue]  <-- shows only pixels with hue from given range (hue has values from [0, 360])  
+filter_skin [imagePath]  <-- tries to filter the color of human skin    

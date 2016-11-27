@@ -5,7 +5,7 @@ module PixelMaps (grayscale,
                   negative, sepia,
                   onlyY, onlyCb, onlyCr,
                   onlyH, onlyL, onlyS,
-                  filterHue) where
+                  filterHue, filterSkin) where
 
 import Control.Monad
 import Control.Monad.Trans
@@ -55,10 +55,25 @@ onlyL f (Z :. i :. j) = Hls.fromHls (0, l, 0)
 onlyS f (Z :. i :. j) = Hls.fromHls (h, 0.5, s)
   where (h, l, s) = Hls.toHls $ f (Z :. i :. j)
 
-filterHue :: Double -> Double -> (R.DIM2 -> RGB8) -> R.DIM2 -> RGB8
-filterHue minHue maxHue f (Z :. i :. j)
-  | s < 0.1          = black
-  | minHue <= maxHue = if h >= minHue && h <= maxHue then Hls.fromHls (h, l, s) else black 
-  | otherwise        = if h >= minHue || h <= maxHue then Hls.fromHls (h, l, s) else black
+type Range = (Double, Double)
+
+inRange :: Range -> Double -> Bool
+inRange (minVal, maxVal) val
+  | minVal <= maxVal = val >= minVal && val <= maxVal
+  | otherwise        = val >= minVal || val <= maxVal
+
+filterHls :: Range -> Range -> Range -> (R.DIM2 -> RGB8) -> R.DIM2 -> RGB8
+filterHls hr lr sr f (Z :. i :. j)
+  | inRange hr h && inRange lr l && inRange sr s = f (Z :. i :. j)
+  | otherwise = (0, 0, 0)
   where (h, l, s) = Hls.toHls $ f (Z :. i :. j)
-        black = (0,0,0)
+
+filterHue :: Range -> (R.DIM2 -> RGB8) -> R.DIM2 -> RGB8
+filterHue hr = filterHls hr (0,360) (0,360)
+
+filterSkin :: (R.DIM2 -> RGB8) -> R.DIM2 -> RGB8
+filterSkin f (Z :. i :. j)
+  | inRange (0.5,3.0) (l/s) = filterHls (330,28) (0,360) (0.2,1) f (Z :. i :. j)
+  | otherwise = (0, 0, 0)
+  where (h, l, s) = Hls.toHls $ f (Z :. i :. j)
+  
