@@ -40,29 +40,29 @@ runCommandHandleExceptions cmd params =
 runCommand :: String -> [String] -> MaybeT IO ()
 runCommand cmd args =
   case map toLower cmd of
-    "grayscale" -> simpleMap grayscale
-    "only_red" -> simpleMap onlyRed
-    "only_green" -> simpleMap onlyGreen
-    "only_blue" -> simpleMap onlyBlue
-    "negative" -> simpleMap negative
-    "only_y" -> simpleMap onlyY
-    "only_cb" -> simpleMap onlyCb
-    "only_cr" -> simpleMap onlyCr
-    "only_h" -> simpleMap onlyH
-    "only_l" -> simpleMap onlyL
-    "only_s" -> simpleMap onlyS
-    "filter_hue" -> simpleMap (filterHue (read $ args !! 1, read $ args !! 2))
-    "filter_skin" -> simpleMap filterSkin
-    "filter_red_eyes" -> simpleMap filterRedEyes
+    "grayscale" -> mapImage' grayscale
+    "only_red" -> mapImage' onlyRed
+    "only_green" -> mapImage' onlyGreen
+    "only_blue" -> mapImage' onlyBlue
+    "negative" -> mapImage' negative
+    "only_y" -> mapImage' onlyY
+    "only_cb" -> mapImage' onlyCb
+    "only_cr" -> mapImage' onlyCr
+    "only_h" -> mapImage' onlyH
+    "only_l" -> mapImage' onlyL
+    "only_s" -> mapImage' onlyS
+    "filter_hue" -> mapImage' (filterHue (read $ args !! 1, read $ args !! 2))
+    "filter_skin" -> mapImage' filterSkin
+    "filter_red_eyes" -> mapImage' filterRedEyes
     _ -> do 
       liftIO $ putStrLn $ "Unknown command: " ++ cmd
       MaybeT $ return Nothing
-    where simpleMap f = runImageMap f $ head args
+    where mapImage' f = mapImage f $ head args
 
-runImageMap :: ((R.DIM2 -> RGB8) -> R.DIM2 -> RGB8) -> FilePath -> MaybeT IO ()
-runImageMap fun imgPath = do
+mapImage :: (RGB8 -> RGB8) -> FilePath -> MaybeT IO ()
+mapImage fun imgPath = do
   img <- readImg imgPath
-  computed <- liftIO $ R.computeUnboxedP (R.traverse (fromImage img) id fun)
+  computed <- liftIO $ R.computeUnboxedP (R.map fun (fromImage img))
   liftIO $ (savePngImage outputPath . ImageRGB8 . toImage) computed
 
 readImg :: FilePath -> MaybeT IO (Image PixelRGB8)

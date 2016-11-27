@@ -18,42 +18,42 @@ import qualified YCbCr as Ycbcr
 import qualified HLS as Hls
 
 -- all functions below have type signatures:
--- f :: (R.DIM2 -> RGB8) -> R.DIM2 -> RGB8
+-- f :: RGB8 -> RGB8 
 
-grayscale f (Z :. i :. j) = 
+grayscale rgb = 
   (avg, avg, avg) 
-  where (r, g, b) = fromIntegral' $ f (Z :. i :. j)
+  where (r, g, b) = fromIntegral' rgb
         avg = round ((r + g + b) / 3)
         
-onlyRed   f (Z :. i :. j) = (r, 0, 0) where (r, g, b) = f (Z :. i :. j)
-onlyGreen f (Z :. i :. j) = (0, g, 0) where (r, g, b) = f (Z :. i :. j)
-onlyBlue  f (Z :. i :. j) = (0, 0, b) where (r, g, b) = f (Z :. i :. j)
-negative  f (Z :. i :. j) = (255 - r, 255 - g, 255 - b) where (r, g, b) = f (Z :. i :. j)
+onlyRed   (r, g, b) = (r, 0, 0)
+onlyGreen (r, g, b) = (0, g, 0)
+onlyBlue  (r, g, b) = (0, 0, b)
+negative  (r, g, b) = (maxBound - r, maxBound - g, maxBound - b)
 
-sepia f (Z :. i :. j) = 
+sepia rgb = 
   (assertBounded' . round') (r', g', b')
-  where (r, g, b) = fromIntegral' $ f (Z :. i :. j)
+  where (r, g, b) = fromIntegral' rgb
         r' = r * 0.393 + g * 0.769 + b * 0.189
         g' = r * 0.349 + g * 0.686 + b * 0.168
         b' = r * 0.272 + g * 0.534 + b * 0.131
 
-onlyY f (Z :. i :. j) = Ycbcr.fromYcbcr (y, 0.0, 0.0)
-  where (y, cb, cr) = Ycbcr.toYcbcr $ f (Z :. i :. j)
+onlyY  rgb = Ycbcr.fromYcbcr (y, 0.0, 0.0)
+  where (y, cb, cr) = Ycbcr.toYcbcr rgb
 
-onlyCb f (Z :. i :. j) = Ycbcr.fromYcbcr (128, cb, 0.0)
-  where (y, cb, cr) = Ycbcr.toYcbcr $ f (Z :. i :. j)
+onlyCb rgb = Ycbcr.fromYcbcr (128, cb, 0.0)
+  where (y, cb, cr) = Ycbcr.toYcbcr rgb
 
-onlyCr f (Z :. i :. j) = Ycbcr.fromYcbcr (128, 0.0, cr)
-  where (y, cb, cr) = Ycbcr.toYcbcr $ f (Z :. i :. j)
+onlyCr rgb = Ycbcr.fromYcbcr (128, 0.0, cr)
+  where (y, cb, cr) = Ycbcr.toYcbcr rgb
 
-onlyH f (Z :. i :. j) = Hls.fromHls (h, 0.5, 0.5)
-  where (h, l, s) = Hls.toHls $ f (Z :. i :. j)
+onlyH rgb = Hls.fromHls (h, 0.5, 0.5)
+  where (h, l, s) = Hls.toHls rgb
 
-onlyL f (Z :. i :. j) = Hls.fromHls (0, l, 0)
-  where (h, l, s) = Hls.toHls $ f (Z :. i :. j)
+onlyL rgb = Hls.fromHls (0, l, 0)
+  where (h, l, s) = Hls.toHls rgb
 
-onlyS f (Z :. i :. j) = Hls.fromHls (h, 0.5, s)
-  where (h, l, s) = Hls.toHls $ f (Z :. i :. j)
+onlyS rgb = Hls.fromHls (h, 0.5, s)
+  where (h, l, s) = Hls.toHls rgb
 
 type Range = (Double, Double)
 
@@ -62,26 +62,24 @@ inRange (minVal, maxVal) val
   | minVal <= maxVal = val >= minVal && val <= maxVal
   | otherwise        = val >= minVal || val <= maxVal
 
-filterHls :: Range -> Range -> Range -> (R.DIM2 -> RGB8) -> R.DIM2 -> Bool
-filterHls hr lr sr f (Z :. i :. j) = 
+filterHls :: Range -> Range -> Range -> RGB8 -> Bool
+filterHls hr lr sr rgb =
   inRange hr h && inRange lr l && inRange sr s
-  where (h, l, s) = Hls.toHls $ f (Z :. i :. j)
+  where (h, l, s) = Hls.toHls rgb
 
-filterHue :: Range -> (R.DIM2 -> RGB8) -> R.DIM2 -> RGB8
-filterHue hr f (Z :. i :. j)
-  | filterHls hr (0, 360) (0, 360) f (Z :. i :. j) = f (Z :. i :. j)
+filterHue :: Range -> RGB8 -> RGB8
+filterHue hr rgb
+  | filterHls hr (0, 360) (0, 360) rgb = rgb
   | otherwise = (0, 0, 0)
 
-filterSkin :: (R.DIM2 -> RGB8) -> R.DIM2 -> RGB8
-filterSkin f (Z :. i :. j)
-  | inRange (0.5, 3.0) (l/s) && filterHls (330, 28) (0, 1) (0.2, 1) f (Z :. i :. j) 
-      = f (Z :. i :. j)
+filterSkin :: RGB8 -> RGB8
+filterSkin rgb
+  | inRange (0.5, 3.0) (l/s) && filterHls (330, 28) (0, 1) (0.2, 1) rgb = rgb
   | otherwise = (0, 0, 0)
-  where (h, l, s) = Hls.toHls $ f (Z :. i :. j)
+  where (h, l, s) = Hls.toHls rgb
 
-filterRedEyes :: (R.DIM2 -> RGB8) -> R.DIM2 -> RGB8
-filterRedEyes f (Z :. i :. j)
-  | inRange (0.5, 1.5) (l/s) && filterHls (162, 7) (0.25, 1) (0.4, 1) f (Z :. i :. j)
-      = f (Z :. i :. j)
+filterRedEyes :: RGB8 -> RGB8
+filterRedEyes rgb
+  | inRange (0.5, 1.5) (l/s) && filterHls (162, 7) (0.25, 1) (0.4, 1) rgb = rgb
   | otherwise = Hls.fromHls (0, l, 0)
-  where (h, l, s) = Hls.toHls $ f (Z :. i :. j)
+  where (h, l, s) = Hls.toHls rgb
