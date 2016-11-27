@@ -53,6 +53,7 @@ runCommand cmd args =
     "only_s" -> simpleMap onlyS
     "filter_hue" -> simpleMap (filterHue (read $ args !! 1, read $ args !! 2))
     "filter_skin" -> simpleMap filterSkin
+    "filter_red_eyes" -> simpleMap filterRedEyes
     _ -> do 
       liftIO $ putStrLn $ "Unknown command: " ++ cmd
       MaybeT $ return Nothing

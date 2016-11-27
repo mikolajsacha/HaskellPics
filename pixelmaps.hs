@@ -5,7 +5,7 @@ module PixelMaps (grayscale,
                   negative, sepia,
                   onlyY, onlyCb, onlyCr,
                   onlyH, onlyL, onlyS,
-                  filterHue, filterSkin) where
+                  filterHue, filterSkin, filterRedEyes) where
 
 import Control.Monad
 import Control.Monad.Trans
@@ -62,18 +62,26 @@ inRange (minVal, maxVal) val
   | minVal <= maxVal = val >= minVal && val <= maxVal
   | otherwise        = val >= minVal || val <= maxVal
 
-filterHls :: Range -> Range -> Range -> (R.DIM2 -> RGB8) -> R.DIM2 -> RGB8
-filterHls hr lr sr f (Z :. i :. j)
-  | inRange hr h && inRange lr l && inRange sr s = f (Z :. i :. j)
-  | otherwise = (0, 0, 0)
+filterHls :: Range -> Range -> Range -> (R.DIM2 -> RGB8) -> R.DIM2 -> Bool
+filterHls hr lr sr f (Z :. i :. j) = 
+  inRange hr h && inRange lr l && inRange sr s
   where (h, l, s) = Hls.toHls $ f (Z :. i :. j)
 
 filterHue :: Range -> (R.DIM2 -> RGB8) -> R.DIM2 -> RGB8
-filterHue hr = filterHls hr (0,360) (0,360)
+filterHue hr f (Z :. i :. j)
+  | filterHls hr (0, 360) (0, 360) f (Z :. i :. j) = f (Z :. i :. j)
+  | otherwise = (0, 0, 0)
 
 filterSkin :: (R.DIM2 -> RGB8) -> R.DIM2 -> RGB8
 filterSkin f (Z :. i :. j)
-  | inRange (0.5,3.0) (l/s) = filterHls (330,28) (0,360) (0.2,1) f (Z :. i :. j)
+  | inRange (0.5, 3.0) (l/s) && filterHls (330, 28) (0, 1) (0.2, 1) f (Z :. i :. j) 
+      = f (Z :. i :. j)
   | otherwise = (0, 0, 0)
   where (h, l, s) = Hls.toHls $ f (Z :. i :. j)
-  
+
+filterRedEyes :: (R.DIM2 -> RGB8) -> R.DIM2 -> RGB8
+filterRedEyes f (Z :. i :. j)
+  | inRange (0.5, 1.5) (l/s) && filterHls (162, 7) (0.25, 1) (0.4, 1) f (Z :. i :. j)
+      = f (Z :. i :. j)
+  | otherwise = Hls.fromHls (0, l, 0)
+  where (h, l, s) = Hls.toHls $ f (Z :. i :. j)
