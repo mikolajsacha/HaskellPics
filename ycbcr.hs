@@ -1,5 +1,3 @@
--- this transformations are already implemented in JuicyPixels. I write them as an exercise
-
 module YCbCr (YCbCr, toYcbcr, fromYcbcr, y, cb, cr, r, g, b) where
 
 import Codec.Picture (Pixel8)

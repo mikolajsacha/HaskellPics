@@ -63,7 +63,3 @@ fromHls (h, l, s) = unpackRgb (r, g, b)
         r = hue2rgb p' q' (h/360.0 + 1.0/3.0)
         g = hue2rgb p' q' (h/360.0)
         b = hue2rgb p' q' (h/360.0 - 1.0/3.0)
-  
-
-
-

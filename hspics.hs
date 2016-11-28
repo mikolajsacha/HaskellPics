@@ -9,6 +9,7 @@ import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
 import System.Environment (getArgs)
 import System.FilePath (replaceExtension)
+import System.Process (system)
 import qualified Codec.Picture.Types as M
 import qualified Data.Array.Repa as R
 import Data.Array.Repa (U, D, Z (..), (:.)(..))
@@ -34,7 +35,9 @@ runCommandHandleExceptions cmd params =
       result <- runMaybeT $ runCommand cmd params
       case result of
         Nothing -> putStrLn "Command failed"
-        Just () -> putStrLn "Command succedded"
+        Just () -> do 
+          putStrLn "Command succedded"
+          void $ system outputPath
     handler :: SomeException -> IO ()
     handler _ = putStrLn "Arguments don't match. Please check out README."
 
@@ -57,6 +60,8 @@ runCommand cmd args =
     "filter_red_eyes" -> mapImage' filterRedEyes
     "average_rgb_filter" -> traverseImage' averageFilter
     "median_rgb_filter" -> traverseImage' medianFilter
+    "average_y_filter" -> traverseImage' yAverageFilter
+    "median_y_filter" -> traverseImage' yMedianFilter
     _ -> do 
       liftIO $ putStrLn $ "Unknown command: " ++ cmd
       MaybeT $ return Nothing

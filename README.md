@@ -47,3 +47,5 @@ filter_red_eyes [imagePath]  <-- filter red eyes on photography
 ##### Noise filters:  
 average_rgb_filter [imagePath]  <-- filter noises using moving average on RGB coordinates  
 median_rgb_filter [imagePath]  <-- filter noises using moving median on RGB coordinates  
+average_y_filter [imagePath]  <-- filter noises using moving average only on Y from YCbCr  
+median_y_filter [imagePath]  <-- filter noises using moving median only on Y from YCbCr  
