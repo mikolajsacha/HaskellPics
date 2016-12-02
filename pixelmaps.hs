@@ -5,7 +5,8 @@ module PixelMaps (grayscale,
                   negative, sepia,
                   onlyY, onlyCb, onlyCr,
                   onlyH, onlyL, onlyS,
-                  filterHue, filterSkin, filterRedEyes) where
+                  filterHue, filterSkin, filterRedEyes,
+                  binarize) where
 
 import Control.Monad
 import Control.Monad.Trans
@@ -83,3 +84,9 @@ filterRedEyes rgb
   | inRange (0.5, 1.5) (l/s) && filterHls (162, 7) (0.25, 1) (0.4, 1) rgb = rgb
   | otherwise = Hls.fromHls (0, l, 0)
   where (h, l, s) = Hls.toHls rgb
+
+binarize :: Double -> Double -> RGB8 -> RGB8
+binarize a b rgb
+  | y > a && y < b  = (0, 0, 0)
+  | otherwise = (maxBound, maxBound, maxBound)
+  where y = Ycbcr.y rgb

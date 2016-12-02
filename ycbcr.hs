@@ -6,7 +6,6 @@ import Pixel
 type YCbCr = (Double, Double, Double)
 type ConvFactors = (Double, Double, Double)
 
-
 y :: RGB8 -> Double
 y rgb = 0.299 * r' + 0.587 * g' + 0.114 * b' 
   where (r', g', b') = fromIntegral' rgb

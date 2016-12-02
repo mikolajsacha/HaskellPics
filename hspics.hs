@@ -62,6 +62,10 @@ runCommand cmd args =
     "median_rgb_filter" -> traverseImage' medianFilter
     "average_y_filter" -> traverseImage' yAverageFilter
     "median_y_filter" -> traverseImage' yMedianFilter
+    "binarize" -> do if length args > 2 then
+                       mapImage' (binarize (read $ args !! 1) (read $ args !! 2))
+                     else
+                       mapImage' (binarize 0 (read $ args !! 1))
     _ -> do 
       liftIO $ putStrLn $ "Unknown command: " ++ cmd
       MaybeT $ return Nothing
