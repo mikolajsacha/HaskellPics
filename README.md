@@ -70,3 +70,4 @@ median_y_filter [imagePath]  <-- filter noises using moving median only on Y fro
 binarize [threshold] <-- binarize image using threshold (from 0 to 256)  
 binarize_otsu <-- binarize image using Otsu's method for calculating treshold  
 binarize_bernsen <-- binarize image using Bernsen's method for calculating treshold  
+binarize_mixed [threshold] <-- binarize image using mixed Otsu's and Bernsen's method with a given threshold

@@ -75,6 +75,7 @@ runCommand cmd args =
                      else mapImage' (binarize 0 (read $ args !! 1))
     "binarize_otsu" -> otsuBinarize $ head args
     "binarize_bernsen" -> bernsenBinarize $ head args
+    "binarize_mixed" -> mixedBinarize (head args) (read $ args !! 1)
     _ -> do 
       liftIO $ putStrLn $ "Unknown command: " ++ cmd
       MaybeT $ return Nothing
@@ -82,6 +83,15 @@ runCommand cmd args =
           traverseMappedImage' f map returnMap =
             traverseImage f (head args) map returnMap
           traverseImage' f = traverseMappedImage' f id id
+
+mixedBinarize :: FilePath -> Double -> MaybeT IO()
+mixedBinarize imgPath threshold = do
+  img <- readImg imgPath
+  yArr <- liftIO $ R.computeUnboxedP $ R.map YCbCr.y $ fromImage img
+  let dim = R.extent yArr
+  binarized <- liftIO $ Bernsen.mixed_binarize yArr threshold
+  computed <- liftIO $ R.computeUnboxedP binarized
+  liftIO $ (savePngImage outputPath . ImageRGB8 . toImage) computed
 
 bernsenBinarize :: FilePath -> MaybeT IO()
 bernsenBinarize imgPath = do
