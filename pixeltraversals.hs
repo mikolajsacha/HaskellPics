@@ -5,7 +5,7 @@ import Codec.Picture (Pixel8)
 import qualified Data.Array.Repa as R
 import Data.Array.Repa (U, D, Z (..), (:.)(..))
 import Data.List (sort, sum)
-import YCbCr as Ycbcr
+import qualified YCbCr as Ycbcr
 import Pixel
 
 pixelSurrounding :: R.DIM2 -> (R.DIM2 -> a) -> R.DIM2 -> [a]
@@ -31,10 +31,8 @@ median :: (Ord a) => [a] -> a
 median li = (sort li) !! (quot (length li) 2)
 
 forEachInTuple :: ([a] -> a) -> [(a, a, a)] -> (a, a, a)
-forEachInTuple fun li = (a, b, c)
-  where a = fun $ map fst' li
-        b = fun $ map snd' li
-        c = fun $ map trd' li
+forEachInTuple fun li = (f fst', f snd', f trd')
+  where f ff = fun $ map ff li
 
 averageFilter :: R.DIM2 -> (R.DIM2 -> RGB8) -> R.DIM2 -> RGB8
 averageFilter = surroundingFilter $ forEachInTuple average

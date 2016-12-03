@@ -4,27 +4,30 @@ A simple command line utility performing some basic operations on images.
 Libraries used: JuicyPixels combined with Repa.  
 I made this program as a practice in Haskell and image processing. There might be some performance flaws and bugs.
 
+
 #### REQUIREMENTS:
 
-JuicyPixels, Repa, Criterion
+GHC compiler
+Packages: JuicyPixels, Repa, Criterion
+
 
 #### COMPILING:
 
-Compile using 'make' ora manually by one of the following commands:
+Compile using 'make' or manually by one of the following commands:
 ghc hspics.hs
 ghc -O -threaded -rtsopts --make hspics.hs
-The latter utilizes optimized and multithreaded Array operations by Repa
+The latter utilizes optimized and multithreaded array operations by Repa
 
 
 #### USAGE:
 
 Run the tool in command line like this:  
 hsimg.exe [command] [parameters]  
-e.g: hsimg.exe grayscale some_picture.jpg
+e.g: hsimg.exe grayscale some_picture.jpg  
 
-For multithreading run with the following flags (recommended!):
-hsimg.exe [command] [parameters] +RTS -N2 -H
-where '-N2' means running on 2 cores
+For multithreading run with the following flags (recommended!):  
+hsimg.exe [command] [parameters] +RTS -N2 -H  
+where '-N2' means running on 2 cores  
 
 Different command line arguments correspond to different types of image processing.  
 Possible input formats: same as in JuicyPixels lib.  
@@ -62,3 +65,7 @@ average_rgb_filter [imagePath]  <-- filter noises using moving average on RGB co
 median_rgb_filter [imagePath]  <-- filter noises using moving median on RGB coordinates  
 average_y_filter [imagePath]  <-- filter noises using moving average only on Y from YCbCr  
 median_y_filter [imagePath]  <-- filter noises using moving median only on Y from YCbCr  
+
+##### Binarization:  
+binarize <-- binarize image using Otsu's method for calculating treshold  
+binarize [threshold] <-- binarize image using threshold (from 0 to 256)  

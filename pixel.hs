@@ -3,13 +3,13 @@ module Pixel (RGB8, fromIntegral', round', assertBounded, assertBounded', max', 
 
 import Codec.Picture (Pixel8)
 
-fst' (a, b, c) = a
-snd' (a, b, c) = b
-trd' (a, b, c) = c
-
 type RGB8 = (Pixel8, Pixel8, Pixel8)
 
 -- functions with ' are equivalents of other functions working on a tuple
+
+fst' (a, b, c) = a
+snd' (a, b, c) = b
+trd' (a, b, c) = c
 
 fromIntegral' :: (Integral a, Num b) => (a, a, a) -> (b, b, b)
 fromIntegral' (r, g, b) = (fromIntegral r, fromIntegral g, fromIntegral b)

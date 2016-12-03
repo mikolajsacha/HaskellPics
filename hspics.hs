@@ -17,8 +17,9 @@ import Data.Char (toLower)
 import PixelMaps
 import PixelTraversals
 import JuicyRepa
-import YCbCr (toYcbcr, fromYcbcr)
-import Criterion.Measurement as Cr
+import YCbCr (toYcbcr, fromYcbcr, y)
+import qualified Otsu as Otsu
+import qualified Criterion.Measurement as Cr
 
 outputPath = "output.png"
 
@@ -71,7 +72,9 @@ runCommand cmd args =
     "binarize" -> do if length args > 2 then
                        mapImage' (binarize (read $ args !! 1) (read $ args !! 2))
                      else
-                       mapImage' (binarize 0 (read $ args !! 1))
+                       if length args > 1 then
+                         mapImage' (binarize 0 (read $ args !! 1))
+                       else otsuBinarize $ head args
     _ -> do 
       liftIO $ putStrLn $ "Unknown command: " ++ cmd
       MaybeT $ return Nothing
@@ -80,15 +83,23 @@ runCommand cmd args =
             traverseImage f (head args) map returnMap
           traverseImage' f = traverseMappedImage' f id id
 
+otsuBinarize :: FilePath -> MaybeT IO()
+otsuBinarize imgPath = do
+  img <- readImg imgPath
+  let arr = fromImage img
+  yArr <- R.computeUnboxedP $ R.map YCbCr.y arr
+  th <- liftIO $ Otsu.threshold yArr 256
+  computed <- liftIO $ R.computeUnboxedP (R.map (binarize 0 th) arr)
+  liftIO $ (savePngImage outputPath . ImageRGB8 . toImage) computed
+
 mapImage :: (RGB8 -> RGB8) -> FilePath -> MaybeT IO ()
 mapImage fun imgPath = do
   img <- readImg imgPath
   computed <- liftIO $ R.computeUnboxedP (R.map fun (fromImage img))
   liftIO $ (savePngImage outputPath . ImageRGB8 . toImage) computed
 
-
 traverseImage :: (R.DIM2 -> (R.DIM2 -> a) -> R.DIM2 -> a)
-                   -> FilePath -> (RGB8 -> a) -> (a -> RGB8) -> MaybeT IO ()
+                 -> FilePath -> (RGB8 -> a) -> (a -> RGB8) -> MaybeT IO ()
 traverseImage fun imgPath mapFun returnMapFun = do
   img <- readImg imgPath
   let arr = R.map mapFun (fromImage img)
