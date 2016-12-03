@@ -4,7 +4,12 @@ A simple command line utility performing some basic operations on images.
 Libraries used: JuicyPixels combined with Repa.  
 I made this program as a practice in Haskell and image processing. There might be some performance flaws and bugs.
 
+#### REQUIREMENTS:
+
+JuicyPixels, Repa, Criterion
+
 #### COMPILING:
+
 Compile using 'make' ora manually by one of the following commands:
 ghc hspics.hs
 ghc -O -threaded -rtsopts --make hspics.hs
