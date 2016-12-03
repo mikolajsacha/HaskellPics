@@ -1,5 +1,6 @@
 module PixelTraversals (averageFilter, medianFilter,
-                        yMedianFilter, yAverageFilter) where
+                        yMedianFilter, yAverageFilter,
+                        surroundingFilter, pixelSurrounding) where
 
 import Codec.Picture (Pixel8)
 import qualified Data.Array.Repa as R

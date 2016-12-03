@@ -19,6 +19,7 @@ import PixelTraversals
 import JuicyRepa
 import YCbCr (toYcbcr, fromYcbcr, y)
 import qualified Otsu as Otsu
+import qualified Bernsen as Bernsen
 import qualified Criterion.Measurement as Cr
 
 outputPath = "output.png"
@@ -71,10 +72,9 @@ runCommand cmd args =
     "median_y_filter" -> traverseMappedImage' yMedianFilter toYcbcr fromYcbcr
     "binarize" -> do if length args > 2 then
                        mapImage' (binarize (read $ args !! 1) (read $ args !! 2))
-                     else
-                       if length args > 1 then
-                         mapImage' (binarize 0 (read $ args !! 1))
-                       else otsuBinarize $ head args
+                     else mapImage' (binarize 0 (read $ args !! 1))
+    "binarize_otsu" -> otsuBinarize $ head args
+    "binarize_bernsen" -> bernsenBinarize $ head args
     _ -> do 
       liftIO $ putStrLn $ "Unknown command: " ++ cmd
       MaybeT $ return Nothing
@@ -82,6 +82,14 @@ runCommand cmd args =
           traverseMappedImage' f map returnMap =
             traverseImage f (head args) map returnMap
           traverseImage' f = traverseMappedImage' f id id
+
+bernsenBinarize :: FilePath -> MaybeT IO()
+bernsenBinarize imgPath = do
+  img <- readImg imgPath
+  let yArr = R.map YCbCr.y $ fromImage img
+  let dim = R.extent yArr
+  computed <- liftIO $ R.computeUnboxedP (Bernsen.binarize dim yArr)
+  liftIO $ (savePngImage outputPath . ImageRGB8 . toImage) computed
 
 otsuBinarize :: FilePath -> MaybeT IO()
 otsuBinarize imgPath = do

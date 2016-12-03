@@ -67,5 +67,6 @@ average_y_filter [imagePath]  <-- filter noises using moving average only on Y f
 median_y_filter [imagePath]  <-- filter noises using moving median only on Y from YCbCr  
 
 ##### Binarization:  
-binarize <-- binarize image using Otsu's method for calculating treshold  
 binarize [threshold] <-- binarize image using threshold (from 0 to 256)  
+binarize_otsu <-- binarize image using Otsu's method for calculating treshold  
+binarize_bernsen <-- binarize image using Bernsen's method for calculating treshold  
