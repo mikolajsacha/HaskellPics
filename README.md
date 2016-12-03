@@ -4,14 +4,22 @@ A simple command line utility performing some basic operations on images.
 Libraries used: JuicyPixels combined with Repa.  
 I made this program as a practice in Haskell and image processing. There might be some performance flaws and bugs.
 
-#### USAGE:
-
-Compile with:  
+#### COMPILING:
+Compile using 'make' ora manually by one of the following commands:
 ghc hspics.hs
+ghc -O -threaded -rtsopts --make hspics.hs
+The latter utilizes optimized and multithreaded Array operations by Repa
+
+
+#### USAGE:
 
 Run the tool in command line like this:  
 hsimg.exe [command] [parameters]  
 e.g: hsimg.exe grayscale some_picture.jpg
+
+For multithreading run with the following flags (recommended!):
+hsimg.exe [command] [parameters] +RTS -N2 -H
+where '-N2' means running on 2 cores
 
 Different command line arguments correspond to different types of image processing.  
 Possible input formats: same as in JuicyPixels lib.  

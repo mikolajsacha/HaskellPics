@@ -40,14 +40,14 @@ averageFilter :: R.DIM2 -> (R.DIM2 -> RGB8) -> R.DIM2 -> RGB8
 averageFilter = surroundingFilter $ forEachInTuple average
 
 medianFilter :: R.DIM2 -> (R.DIM2 -> RGB8) -> R.DIM2 -> RGB8
-medianFilter  = surroundingFilter $ forEachInTuple median
+medianFilter = surroundingFilter $ forEachInTuple median
 
-yAverageFilter :: R.DIM2 -> (R.DIM2 -> RGB8) -> R.DIM2 -> RGB8
-yAverageFilter dim f coords = Ycbcr.fromYcbcr (y', cb, cr)
-  where (y, cb, cr) = Ycbcr.toYcbcr $ f coords
-        y' = surroundingFilter averageD dim (Ycbcr.y . f) coords
+yAverageFilter :: R.DIM2 -> (R.DIM2 -> Ycbcr.YCbCr) -> R.DIM2 -> Ycbcr.YCbCr
+yAverageFilter dim f coords = (y', cb, cr)
+  where (y, cb, cr) = f coords
+        y' = surroundingFilter averageD dim (fst' . f) coords
           
-yMedianFilter :: R.DIM2 -> (R.DIM2 -> RGB8) -> R.DIM2 -> RGB8
-yMedianFilter dim f coords = Ycbcr.fromYcbcr (y', cb, cr)
-  where (y, cb, cr) = Ycbcr.toYcbcr $ f coords
-        y' = surroundingFilter median dim (Ycbcr.y . f) coords
+yMedianFilter :: R.DIM2 -> (R.DIM2 -> Ycbcr.YCbCr) -> R.DIM2 -> Ycbcr.YCbCr
+yMedianFilter dim f coords = (y', cb, cr)
+  where (y, cb, cr) = f coords
+        y' = surroundingFilter median dim (fst' . f) coords

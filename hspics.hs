@@ -17,6 +17,8 @@ import Data.Char (toLower)
 import PixelMaps
 import PixelTraversals
 import JuicyRepa
+import YCbCr (toYcbcr, fromYcbcr)
+import Criterion.Measurement as Cr
 
 outputPath = "output.png"
 
@@ -32,11 +34,15 @@ runCommandHandleExceptions cmd params =
   catch commandRun handler
   where
     commandRun = do
+      Cr.initializeTime
       result <- runMaybeT $ runCommand cmd params
       case result of
         Nothing -> putStrLn "Command failed"
         Just () -> do 
-          putStrLn "Command succedded"
+          executionTime <- Cr.getTime
+          putStr "Command succedded in "
+          (putStr . show . round . (*1000)) executionTime
+          putStrLn " milliseconds"
           void $ system outputPath
     handler :: SomeException -> IO ()
     handler _ = putStrLn "Arguments don't match. Please check out README."
@@ -60,8 +66,8 @@ runCommand cmd args =
     "filter_red_eyes" -> mapImage' filterRedEyes
     "average_rgb_filter" -> traverseImage' averageFilter
     "median_rgb_filter" -> traverseImage' medianFilter
-    "average_y_filter" -> traverseImage' yAverageFilter
-    "median_y_filter" -> traverseImage' yMedianFilter
+    "average_y_filter" -> traverseMappedImage' yAverageFilter toYcbcr fromYcbcr
+    "median_y_filter" -> traverseMappedImage' yMedianFilter toYcbcr fromYcbcr
     "binarize" -> do if length args > 2 then
                        mapImage' (binarize (read $ args !! 1) (read $ args !! 2))
                      else
@@ -70,7 +76,9 @@ runCommand cmd args =
       liftIO $ putStrLn $ "Unknown command: " ++ cmd
       MaybeT $ return Nothing
     where mapImage' f = mapImage f $ head args
-          traverseImage' f = traverseImage f $ head args
+          traverseMappedImage' f map returnMap =
+            traverseImage f (head args) map returnMap
+          traverseImage' f = traverseMappedImage' f id id
 
 mapImage :: (RGB8 -> RGB8) -> FilePath -> MaybeT IO ()
 mapImage fun imgPath = do
@@ -78,13 +86,15 @@ mapImage fun imgPath = do
   computed <- liftIO $ R.computeUnboxedP (R.map fun (fromImage img))
   liftIO $ (savePngImage outputPath . ImageRGB8 . toImage) computed
 
-traverseImage :: (R.DIM2 -> (R.DIM2 -> RGB8) -> R.DIM2 -> RGB8)
-              -> FilePath -> MaybeT IO ()
-traverseImage fun imgPath = do
+
+traverseImage :: (R.DIM2 -> (R.DIM2 -> a) -> R.DIM2 -> a)
+                   -> FilePath -> (RGB8 -> a) -> (a -> RGB8) -> MaybeT IO ()
+traverseImage fun imgPath mapFun returnMapFun = do
   img <- readImg imgPath
-  let arr = fromImage img
+  let arr = R.map mapFun (fromImage img)
   let fun' = fun $ R.extent arr
-  computed <- liftIO $ R.computeUnboxedP (R.traverse arr id fun')
+  let result = R.map returnMapFun (R.traverse arr id fun')
+  computed <- (liftIO . R.computeUnboxedP) result
   liftIO $ (savePngImage outputPath . ImageRGB8 . toImage) computed
 
 readImg :: FilePath -> MaybeT IO (Image PixelRGB8)
