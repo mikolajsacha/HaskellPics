@@ -67,7 +67,11 @@ average_y_filter [imagePath]  <-- filter noises using moving average only on Y f
 median_y_filter [imagePath]  <-- filter noises using moving median only on Y from YCbCr  
 
 ##### Binarization:  
-binarize [threshold] <-- binarize image using threshold (from 0 to 256)  
-binarize_otsu <-- binarize image using Otsu's method for calculating treshold  
-binarize_bernsen <-- binarize image using Bernsen's method for calculating treshold  
-binarize_mixed [threshold] <-- binarize image using mixed Otsu's and Bernsen's method with a given threshold
+binarize [imagePath] [threshold] <-- binarize image using threshold (from 0 to 256)  
+binarize_otsu [imagePath] <-- binarize image using Otsu's method for calculating treshold  
+binarize_bernsen [imagePath] <-- binarize image using Bernsen's method for calculating treshold  
+binarize_mixed [imagePath] [threshold] <-- binarize image using mixed Otsu's and Bernsen's method with a given threshold
+
+##### Morphology:  
+erosion [imagePath] [windowSize] <-- apply erosion with given window size (window size can be 0,1,2,...)
+dilation [imagePath] [windowSize] <-- apply dilation with given window size (window size can be 0,1,2,...)

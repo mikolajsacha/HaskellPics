@@ -18,17 +18,15 @@ morphStruct n
                        ones = replicate (i*2 + 1) maxBound
                        zeros = replicate (n - i) minBound
 
-filterToFitStruct :: Int -> [a] -> [a]
-filterToFitStruct n = map snd . filter fst . zip (morphStruct n :: [Bool])
+filterToFitStruct :: (Eq a, Bounded a) => Int -> [a] -> [a] -> [a]
+filterToFitStruct n struct = map snd . filter ((== maxBound) . fst) . zip struct
 
-erosion :: (Ord a, Bounded a) => Int -> R.DIM2 -> (R.DIM2 -> (a, a, a)) -> R.DIM2 -> (a, a, a)
-erosion n dim f coords = 
-  (morph fst', morph snd', morph trd')
+erosion :: Int -> R.DIM2 -> (R.DIM2 -> Bool) -> R.DIM2 -> Bool
+erosion n dim f coords = and $ filterToFitStruct n struct (zipWith (&&) struct surr)
   where surr = pixelSurrounding n dim f coords
-        morph el = minimum $ filterToFitStruct n (zipWith min (morphStruct n) (map el surr))
+        struct = morphStruct n
 
-dilation :: (Ord a, Bounded a) => Int -> R.DIM2 -> (R.DIM2 -> (a, a, a)) -> R.DIM2 -> (a, a, a)
-dilation n dim f coords =
-  (morph fst', morph snd', morph trd')
+dilation :: Int -> R.DIM2 -> (R.DIM2 -> Bool) -> R.DIM2 -> Bool
+dilation n dim f coords = or $ filterToFitStruct n struct (zipWith (&&) struct surr)
   where surr = pixelSurrounding n dim f coords
-        morph el = maximum $ filterToFitStruct n (zipWith min (morphStruct n) (map el surr))
+        struct = morphStruct n

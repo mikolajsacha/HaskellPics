@@ -72,13 +72,13 @@ runCommand cmd args =
     "average_y_filter" -> traverseMappedImage' yAverageFilter toYcbcr fromYcbcr
     "median_y_filter" -> traverseMappedImage' yMedianFilter toYcbcr fromYcbcr
     "binarize" -> if length args > 2 then
-                     mapImage' (binarize (read $ args !! 1) (read $ args !! 2))
-                  else mapImage' (binarize 0 (read $ args !! 1))
+                     mapImage' (binarize' (read $ args !! 1) (read $ args !! 2))
+                  else mapImage' (binarize' 0 (read $ args !! 1))
     "binarize_otsu" -> otsuBinarize $ head args
     "binarize_bernsen" -> bernsenBinarize $ head args
     "binarize_mixed" -> mixedBinarize (head args) (read $ args !! 1)
-    "erosion" -> traverseImage' (erosion (read $ args !! 1))
-    "dilation" -> traverseImage' (dilation (read $ args !! 1))
+    "erosion" -> morphology (read $ args !! 1) (head args) erosion
+    "dilation" -> morphology (read $ args !! 1) (head args) dilation
     _ -> do 
       liftIO $ putStrLn $ "Unknown command: " ++ cmd
       MaybeT $ return Nothing
@@ -86,10 +86,14 @@ runCommand cmd args =
           traverseMappedImage' f = traverseImage f (head args)
           traverseImage' f = traverseMappedImage' f id id
 
+loadImg imgPath = do
+  img <- readImg imgPath
+  return $ fromImage img
+
 mixedBinarize :: FilePath -> Double -> MaybeT IO()
 mixedBinarize imgPath threshold = do
-  img <- readImg imgPath
-  yArr <- liftIO $ R.computeUnboxedP $ R.map YCbCr.y $ fromImage img
+  arr <- loadImg imgPath
+  yArr <- liftIO $ R.computeUnboxedP $ R.map YCbCr.y arr
   let dim = R.extent yArr
   binarized <- liftIO $ Bernsen.mixedBinarize yArr threshold
   computed <- liftIO $ R.computeUnboxedP binarized
@@ -97,34 +101,49 @@ mixedBinarize imgPath threshold = do
 
 bernsenBinarize :: FilePath -> MaybeT IO()
 bernsenBinarize imgPath = do
-  img <- readImg imgPath
-  let yArr = R.map YCbCr.y $ fromImage img
+  arr <- loadImg imgPath
+  let yArr = R.map YCbCr.y arr
   let dim = R.extent yArr
   computed <- liftIO $ R.computeUnboxedP (Bernsen.binarize dim yArr)
   liftIO $ (savePngImage outputPath . ImageRGB8 . toImage) computed
 
+otsuThreshold :: R.Array D R.DIM2 RGB8 -> MaybeT IO Double
+otsuThreshold arr = do
+  yArr <- R.computeUnboxedP $ R.map YCbCr.y arr
+  liftIO $ Otsu.threshold yArr 256
+
 otsuBinarize :: FilePath -> MaybeT IO()
 otsuBinarize imgPath = do
-  img <- readImg imgPath
-  let arr = fromImage img
-  yArr <- R.computeUnboxedP $ R.map YCbCr.y arr
-  th <- liftIO $ Otsu.threshold yArr 256
-  computed <- liftIO $ R.computeUnboxedP (R.map (binarize 0 th) arr)
+  arr <- loadImg imgPath
+  th <- otsuThreshold arr
+  computed <- liftIO $ R.computeUnboxedP (R.map (binarize' 0 th) arr)
+  liftIO $ (savePngImage outputPath . ImageRGB8 . toImage) computed
+
+morphology :: Int -> FilePath ->
+              (Int -> R.DIM2 -> (R.DIM2 -> Bool) -> R.DIM2 -> Bool) -> MaybeT IO()
+morphology n imgPath fun = do
+  arr <- loadImg imgPath
+  th <- otsuThreshold arr
+  let binarized = R.map (binarize 0 th) arr
+  let fun' = fun n (R.extent arr)
+  let afterMorph = R.traverse binarized id fun'
+  let result = R.map (triple . boundedToBounded) afterMorph
+  computed <- (liftIO . R.computeUnboxedP) result
   liftIO $ (savePngImage outputPath . ImageRGB8 . toImage) computed
 
 mapImage :: (RGB8 -> RGB8) -> FilePath -> MaybeT IO ()
 mapImage fun imgPath = do
-  img <- readImg imgPath
-  computed <- liftIO $ R.computeUnboxedP (R.map fun (fromImage img))
+  arr <- loadImg imgPath
+  computed <- liftIO $ R.computeUnboxedP (R.map fun arr)
   liftIO $ (savePngImage outputPath . ImageRGB8 . toImage) computed
 
 traverseImage :: (R.DIM2 -> (R.DIM2 -> a) -> R.DIM2 -> a)
                  -> FilePath -> (RGB8 -> a) -> (a -> RGB8) -> MaybeT IO ()
 traverseImage fun imgPath mapFun returnMapFun = do
-  img <- readImg imgPath
-  let arr = R.map mapFun (fromImage img)
-  let fun' = fun $ R.extent arr
-  let result = R.map returnMapFun (R.traverse arr id fun')
+  arr <- loadImg imgPath
+  let mappedArr = R.map mapFun arr
+  let fun' = fun $ R.extent mappedArr
+  let result = R.map returnMapFun (R.traverse mappedArr id fun')
   computed <- (liftIO . R.computeUnboxedP) result
   liftIO $ (savePngImage outputPath . ImageRGB8 . toImage) computed
 
