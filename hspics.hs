@@ -18,8 +18,9 @@ import PixelMaps
 import PixelTraversals
 import JuicyRepa
 import YCbCr (toYcbcr, fromYcbcr, y)
-import qualified Otsu as Otsu
-import qualified Bernsen as Bernsen
+import qualified Otsu
+import qualified Bernsen
+import Morphology 
 import qualified Criterion.Measurement as Cr
 
 outputPath = "output.png"
@@ -70,18 +71,19 @@ runCommand cmd args =
     "median_rgb_filter" -> traverseImage' medianFilter
     "average_y_filter" -> traverseMappedImage' yAverageFilter toYcbcr fromYcbcr
     "median_y_filter" -> traverseMappedImage' yMedianFilter toYcbcr fromYcbcr
-    "binarize" -> do if length args > 2 then
-                       mapImage' (binarize (read $ args !! 1) (read $ args !! 2))
-                     else mapImage' (binarize 0 (read $ args !! 1))
+    "binarize" -> if length args > 2 then
+                     mapImage' (binarize (read $ args !! 1) (read $ args !! 2))
+                  else mapImage' (binarize 0 (read $ args !! 1))
     "binarize_otsu" -> otsuBinarize $ head args
     "binarize_bernsen" -> bernsenBinarize $ head args
     "binarize_mixed" -> mixedBinarize (head args) (read $ args !! 1)
+    "erosion" -> traverseImage' (erosion (read $ args !! 1))
+    "dilation" -> traverseImage' (dilation (read $ args !! 1))
     _ -> do 
       liftIO $ putStrLn $ "Unknown command: " ++ cmd
       MaybeT $ return Nothing
     where mapImage' f = mapImage f $ head args
-          traverseMappedImage' f map returnMap =
-            traverseImage f (head args) map returnMap
+          traverseMappedImage' f = traverseImage f (head args)
           traverseImage' f = traverseMappedImage' f id id
 
 mixedBinarize :: FilePath -> Double -> MaybeT IO()
@@ -89,7 +91,7 @@ mixedBinarize imgPath threshold = do
   img <- readImg imgPath
   yArr <- liftIO $ R.computeUnboxedP $ R.map YCbCr.y $ fromImage img
   let dim = R.extent yArr
-  binarized <- liftIO $ Bernsen.mixed_binarize yArr threshold
+  binarized <- liftIO $ Bernsen.mixedBinarize yArr threshold
   computed <- liftIO $ R.computeUnboxedP binarized
   liftIO $ (savePngImage outputPath . ImageRGB8 . toImage) computed
 

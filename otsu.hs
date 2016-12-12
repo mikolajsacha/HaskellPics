@@ -9,7 +9,7 @@ import qualified Data.Vector.Unboxed as V
 import qualified Data.Vector.Unboxed.Mutable as Vm
 import qualified Data.List as L
 
-histogram :: R.Array U sh Double -> Int -> IO ([Int])
+histogram :: R.Array U sh Double -> Int -> IO [Int]
 histogram arr buckets = do
   hist <- Vm.replicate buckets 0
   V.mapM_ (updateHist hist) vec
@@ -20,10 +20,10 @@ histogram arr buckets = do
         min = V.minimum vec
         d   = max - min + 1.0
         updateHist vec val = do
-          let bucket = floor ((val - min) / d * (fromIntegral buckets))
+          let bucket = floor ((val - min) / d * fromIntegral buckets)
           Vm.modify vec (+1) bucket
 
-threshold :: R.Array U sh Double -> Int -> IO (Double)
+threshold :: R.Array U sh Double -> Int -> IO Double
 threshold arr buckets = do
   hist <- histogram arr buckets
   return $ histThreshold hist  
@@ -36,7 +36,7 @@ histThreshold hist = (th1 + th2) / 2.0
         total = fromIntegral $ L.sum hist
         sum = foldl (\acc (i, v) -> acc + i*v ) 0.0 (zip [1.0..] (L.tail hist'))
         f (wB, wF, th1, th2, sumB, max, break) (index, bucketValue) =
-          if break == True then (wB, wF, th1, th2, sumB, max, True)
+          if break then (wB, wF, th1, th2, sumB, max, True)
           else
             let wB' = wB + bucketValue
                 wF' = total - wB' in
