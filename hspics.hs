@@ -79,6 +79,8 @@ runCommand cmd args =
     "binarize_mixed" -> mixedBinarize (head args) (read $ args !! 1)
     "erosion" -> morphology (read $ args !! 1) (head args) erosion
     "dilation" -> morphology (read $ args !! 1) (head args) dilation
+    "rgb_erosion" -> traverseImage' (rgbMorphology erosion (read $ args !! 1))
+    "rgb_dilation" -> traverseImage' (rgbMorphology dilation (read $ args !! 1))
     "opening" -> doubleMorphology (read $ args !! 1) (head args) erosion dilation
     "closing" -> doubleMorphology (read $ args !! 1) (head args) dilation erosion
     _ -> do 
@@ -124,7 +126,7 @@ otsuBinarize imgPath = do
 morphology :: Int -> FilePath ->
               (Int -> R.DIM2 -> (R.DIM2 -> Bool) -> R.DIM2 -> Bool) -> MaybeT IO()
 morphology n imgPath fun = doubleMorphology n imgPath fun id'
- where id' n dim f = f 
+  where id' n dim f = f 
 
 doubleMorphology :: Int -> FilePath ->
               (Int -> R.DIM2 -> (R.DIM2 -> Bool) -> R.DIM2 -> Bool) -> 

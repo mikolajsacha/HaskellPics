@@ -1,4 +1,4 @@
-module Morphology (erosion, dilation) where
+module Morphology (erosion, dilation, rgbMorphology) where
 
 import Codec.Picture (Pixel8)
 import qualified Data.Array.Repa as R
@@ -21,14 +21,19 @@ morphStruct n
 filterToFitStruct :: (Eq a, Bounded a) => Int -> [a] -> [a] -> [a]
 filterToFitStruct n struct = map snd . filter ((== maxBound) . fst) . zip struct
 
-basicMorphology :: ([Bool] -> Bool) -> Int -> R.DIM2 -> (R.DIM2 -> Bool) -> R.DIM2 -> Bool
+basicMorphology :: (Ord a, Bounded a) => ([a] -> a) -> Int -> R.DIM2 -> (R.DIM2 -> a) -> R.DIM2 -> a
 basicMorphology aggregation n dim f coords = 
-  aggregation $ filterToFitStruct n struct (zipWith (&&) struct surr)
+  aggregation $ filterToFitStruct n struct (zipWith min struct surr)
   where surr = pixelSurrounding n dim f coords
         struct = morphStruct n
 
-erosion :: Int -> R.DIM2 -> (R.DIM2 -> Bool) -> R.DIM2 -> Bool
-erosion = basicMorphology and
+erosion :: (Ord a, Bounded a) => Int -> R.DIM2 -> (R.DIM2 -> a) -> R.DIM2 -> a
+erosion = basicMorphology minimum
 
-dilation :: Int -> R.DIM2 -> (R.DIM2 -> Bool) -> R.DIM2 -> Bool
-dilation = basicMorphology or
+dilation :: (Ord a, Bounded a) => Int -> R.DIM2 -> (R.DIM2 -> a) -> R.DIM2 -> a
+dilation = basicMorphology maximum
+
+rgbMorphology fun n dim f coords = (r, g, b)
+  where r = fun n dim (fst' . f) coords
+        g = fun n dim (snd' . f) coords
+        b = fun n dim (trd' . f) coords

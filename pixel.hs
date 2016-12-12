@@ -1,5 +1,5 @@
 -- basic functions for operating on a single pixel
-module Pixel (RGB8, fromIntegral', round', assertBounded, assertBounded', max', min', fst', snd', trd') where
+module Pixel (RGB8, fromIntegral', round', assertBounded, assertBounded', max', min', fst', snd', trd', map') where
 
 import Codec.Picture (Pixel8)
 
@@ -12,10 +12,10 @@ snd' (a, b, c) = b
 trd' (a, b, c) = c
 
 fromIntegral' :: (Integral a, Num b) => (a, a, a) -> (b, b, b)
-fromIntegral' (r, g, b) = (fromIntegral r, fromIntegral g, fromIntegral b)
+fromIntegral' = map' fromIntegral
 
 round' :: (RealFrac a, Integral b) => (a, a, a) -> (b, b, b)
-round' (r, g, b) = (round r, round g, round b)
+round' = map' round
 
 assertBounded :: (Integral a, Integral b, Bounded b) => a -> b
 assertBounded p 
@@ -26,10 +26,13 @@ assertBounded p
         min = minBound
 
 assertBounded' :: (Integral a, Integral b, Bounded b) => (a, a, a) -> (b, b, b)
-assertBounded' (r, g, b) = (assertBounded r, assertBounded g, assertBounded b)
+assertBounded' = map' assertBounded
 
 max' :: (Ord a) => (a, a, a) -> a
 max' (x, y, z) = maximum [x, y, z]
 
 min' :: (Ord a) => (a, a, a) -> a
 min' (x, y, z) = minimum [x, y, z]
+
+map' :: (a -> b) -> (a, a, a) -> (b, b, b)
+map' f (a, b, c) = (f a, f b, f c)
