@@ -73,5 +73,7 @@ binarize_bernsen [imagePath] <-- binarize image using Bernsen's method for calcu
 binarize_mixed [imagePath] [threshold] <-- binarize image using mixed Otsu's and Bernsen's method with a given threshold
 
 ##### Morphology:  
-erosion [imagePath] [windowSize] <-- apply erosion with given window size (window size can be 0,1,2,...)
-dilation [imagePath] [windowSize] <-- apply dilation with given window size (window size can be 0,1,2,...)
+erosion [imagePath] [windowSize] <-- apply erosion with given window size (window size can be 0,1,2,...) using Otsu binarization
+dilation [imagePath] [windowSize] <-- apply dilation with given window size (window size can be 0,1,2,...) using Otsu binarization
+opening [imagePath] [windowSize] <-- Dilation after erosion
+closing [imagePath] [windowSize] <-- Erosion after dilation

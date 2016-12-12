@@ -79,6 +79,8 @@ runCommand cmd args =
     "binarize_mixed" -> mixedBinarize (head args) (read $ args !! 1)
     "erosion" -> morphology (read $ args !! 1) (head args) erosion
     "dilation" -> morphology (read $ args !! 1) (head args) dilation
+    "opening" -> doubleMorphology (read $ args !! 1) (head args) erosion dilation
+    "closing" -> doubleMorphology (read $ args !! 1) (head args) dilation erosion
     _ -> do 
       liftIO $ putStrLn $ "Unknown command: " ++ cmd
       MaybeT $ return Nothing
@@ -121,13 +123,21 @@ otsuBinarize imgPath = do
 
 morphology :: Int -> FilePath ->
               (Int -> R.DIM2 -> (R.DIM2 -> Bool) -> R.DIM2 -> Bool) -> MaybeT IO()
-morphology n imgPath fun = do
+morphology n imgPath fun = doubleMorphology n imgPath fun id'
+ where id' n dim f = f 
+
+doubleMorphology :: Int -> FilePath ->
+              (Int -> R.DIM2 -> (R.DIM2 -> Bool) -> R.DIM2 -> Bool) -> 
+              (Int -> R.DIM2 -> (R.DIM2 -> Bool) -> R.DIM2 -> Bool) -> MaybeT IO()
+doubleMorphology n imgPath fun1 fun2 = do
   arr <- loadImg imgPath
   th <- otsuThreshold arr
   let binarized = R.map (binarize 0 th) arr
-  let fun' = fun n (R.extent arr)
-  let afterMorph = R.traverse binarized id fun'
-  let result = R.map (triple . boundedToBounded) afterMorph
+  let fun1' = fun1 n (R.extent arr)
+  let fun2' = fun2 n (R.extent arr)
+  let afterMorph1 = R.traverse binarized id fun1'
+  let afterMorph2 = R.traverse afterMorph1 id fun2'
+  let result = R.map (triple . boundedToBounded) afterMorph2
   computed <- (liftIO . R.computeUnboxedP) result
   liftIO $ (savePngImage outputPath . ImageRGB8 . toImage) computed
 

@@ -21,12 +21,14 @@ morphStruct n
 filterToFitStruct :: (Eq a, Bounded a) => Int -> [a] -> [a] -> [a]
 filterToFitStruct n struct = map snd . filter ((== maxBound) . fst) . zip struct
 
-erosion :: Int -> R.DIM2 -> (R.DIM2 -> Bool) -> R.DIM2 -> Bool
-erosion n dim f coords = and $ filterToFitStruct n struct (zipWith (&&) struct surr)
+basicMorphology :: ([Bool] -> Bool) -> Int -> R.DIM2 -> (R.DIM2 -> Bool) -> R.DIM2 -> Bool
+basicMorphology aggregation n dim f coords = 
+  aggregation $ filterToFitStruct n struct (zipWith (&&) struct surr)
   where surr = pixelSurrounding n dim f coords
         struct = morphStruct n
 
+erosion :: Int -> R.DIM2 -> (R.DIM2 -> Bool) -> R.DIM2 -> Bool
+erosion = basicMorphology and
+
 dilation :: Int -> R.DIM2 -> (R.DIM2 -> Bool) -> R.DIM2 -> Bool
-dilation n dim f coords = or $ filterToFitStruct n struct (zipWith (&&) struct surr)
-  where surr = pixelSurrounding n dim f coords
-        struct = morphStruct n
+dilation = basicMorphology or
