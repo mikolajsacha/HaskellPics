@@ -1,10 +1,7 @@
 module Morphology (MorphShape, erosion, dilation, rgbMorphology) where
 
-import Codec.Picture (Pixel8)
 import qualified Data.Array.Repa as R
 import Data.Array.Repa (U, D, Z (..), (:.)(..))
-import Data.List as L
-import YCbCr as Ycbcr
 import Pixel
 import PixelTraversals
 
@@ -48,3 +45,22 @@ rgbMorphology fun n f coords = (r, g, b)
   where r = fun n (fst' . f) coords
         g = fun n (snd' . f) coords
         b = fun n (trd' . f) coords
+
+data StructElement = Zero | X | One deriving (Eq)
+instance Bounded StructElement where
+  minBound = Zero
+  maxBound = One
+
+fitsBasicShape :: (Eq a, Bounded a) => [StructElement] -> [a] -> Bool
+fitsBasicShape sli li = all (==True) (zipWith comp sli li)
+  where comp Zero el = el == maxBound
+        comp One el = el == maxBound
+        comp X el = True
+
+hitAndMiss :: (Eq a, Bounded a) => [StructElement] -> Int -> R.DIM2 -> (R.DIM2 -> a) -> R.DIM2 -> a
+hitAndMiss shape n dim f coords =
+  if fitsBasicShape shape surr then maxBound
+  else minBound
+    where surr = pixelSurrounding n dim f coords
+
+
