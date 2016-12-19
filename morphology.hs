@@ -1,4 +1,4 @@
-module Morphology (erosion, dilation, rgbMorphology) where
+module Morphology (MorphShape, erosion, dilation, rgbMorphology) where
 
 import Codec.Picture (Pixel8)
 import qualified Data.Array.Repa as R
@@ -8,32 +8,43 @@ import YCbCr as Ycbcr
 import Pixel
 import PixelTraversals
 
-morphStruct :: (Bounded a) => Int -> [a]
-morphStruct n
-  | n < 0 = error "morphStruct: n must be non-negative"
-  | otherwise = iter 0
-  where iter i | i == n = replicate (2*n + 1) maxBound
-               | otherwise = l ++ iter (i + 1) ++ l
-                 where l = zeros ++ ones ++ zeros 
-                       ones = replicate (i*2 + 1) maxBound
-                       zeros = replicate (n - i) minBound
+data MorphShape = Square | Circle | Cross deriving (Eq, Read)
 
-filterToFitStruct :: (Eq a, Bounded a) => Int -> [a] -> [a] -> [a]
-filterToFitStruct n struct = map snd . filter ((== maxBound) . fst) . zip struct
+reshape :: MorphShape -> Int -> [a] -> [a]
+reshape Circle n li =
+ map fst (filter f (zip li [0..((n*2 + 1) ^ 2) - 1]))
+  where s = n*2 + 1
+        f (el, i) =
+          let row = quot i s
+              rel_row = if row > n then s - 1 - row else row
+              start_i = n - rel_row
+              count = rel_row*2 + 1
+              rel_i = i `mod` s in
+          rel_i >= start_i && rel_i < start_i + count
 
-basicMorphology :: (Ord a, Bounded a) => ([a] -> a) -> Int -> R.DIM2 -> (R.DIM2 -> a) -> R.DIM2 -> a
-basicMorphology aggregation n dim f coords = 
-  aggregation $ filterToFitStruct n struct (zipWith min struct surr)
-  where surr = pixelSurrounding n dim f coords
-        struct = morphStruct n
+reshape Square n li = take ((n*2 + 1) ^ 2) li
+reshape Cross n li = 
+ map fst (filter f (zip li [0..((n*2 + 1) ^ 2) - 1]))
+  where s = n*2 + 1
+        f (el, i) =
+          let row = quot i s
+              rel_i = i `mod` s in
+          row == n || (rel_i == n)
 
-erosion :: (Ord a, Bounded a) => Int -> R.DIM2 -> (R.DIM2 -> a) -> R.DIM2 -> a
+basicMorphology :: (Ord a, Bounded a) => ([a] -> a) -> MorphShape -> Int -> R.DIM2 -> (R.DIM2 -> a) -> R.DIM2 -> a
+basicMorphology aggregation shape n dim f coords = 
+  aggregation (map (min maxBound) surr)
+  where surr = reshape shape n (pixelSurrounding n dim f coords)
+
+erosion :: (Ord a, Bounded a) => MorphShape -> Int -> R.DIM2 -> (R.DIM2 -> a) -> R.DIM2 -> a
 erosion = basicMorphology minimum
 
-dilation :: (Ord a, Bounded a) => Int -> R.DIM2 -> (R.DIM2 -> a) -> R.DIM2 -> a
+dilation :: (Ord a, Bounded a) => MorphShape -> Int -> R.DIM2 -> (R.DIM2 -> a) -> R.DIM2 -> a
 dilation = basicMorphology maximum
 
-rgbMorphology fun n dim f coords = (r, g, b)
-  where r = fun n dim (fst' . f) coords
-        g = fun n dim (snd' . f) coords
-        b = fun n dim (trd' . f) coords
+rgbMorphology :: (Ord a, Bounded a) =>
+  (R.DIM2 -> (R.DIM2 -> a) -> R.DIM2 -> a) -> R.DIM2 -> (R.DIM2 -> (a, a, a)) -> R.DIM2 -> (a, a, a) 
+rgbMorphology fun n f coords = (r, g, b)
+  where r = fun n (fst' . f) coords
+        g = fun n (snd' . f) coords
+        b = fun n (trd' . f) coords
