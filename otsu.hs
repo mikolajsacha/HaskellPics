@@ -1,6 +1,6 @@
 -- otsu algorithm for binarization
 
-module Otsu (threshold) where
+module Otsu (threshold, binarize) where
 
 import qualified Data.Array.Repa as R
 import qualified Data.Map as Map
@@ -8,6 +8,9 @@ import Data.Array.Repa (U, D, Z (..), (:.)(..))
 import qualified Data.Vector.Unboxed as V
 import qualified Data.Vector.Unboxed.Mutable as Vm
 import qualified Data.List as L
+import qualified PixelMaps as PMaps
+import Pixel
+import qualified YCbCr
 
 histogram :: R.Array U sh Double -> Int -> IO [Int]
 histogram arr buckets = do
@@ -27,6 +30,12 @@ threshold :: R.Array U sh Double -> Int -> IO Double
 threshold arr buckets = do
   hist <- histogram arr buckets
   return $ histThreshold hist  
+
+binarize :: R.Array U R.DIM2 RGB8 -> IO (R.Array D R.DIM2 RGB8)
+binarize arr = do
+  yArr <- R.computeUnboxedP $ R.map YCbCr.y arr
+  th <- threshold yArr 256
+  return $ R.map (PMaps.binarizeY' 0 th) yArr
     
 histThreshold :: [Int] -> Double
 histThreshold hist = (th1 + th2) / 2.0

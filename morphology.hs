@@ -1,9 +1,12 @@
-module Morphology (MorphShape, erosion, dilation, rgbMorphology) where
+module Morphology (MorphShape, erosion, dilation, rgbMorphology, morphology, doubleMorphology) where
 
 import qualified Data.Array.Repa as R
 import Data.Array.Repa (U, D, Z (..), (:.)(..))
 import Pixel
 import PixelTraversals
+import PixelMaps
+import qualified YCbCr
+import qualified Otsu
 
 data MorphShape = Square | Circle | Cross deriving (Eq, Read)
 
@@ -62,4 +65,21 @@ hitAndMiss shape n dim f coords =
   else minBound
     where surr = pixelSurrounding n dim f coords
 
+
+morphology :: R.Array U R.DIM2 RGB8 ->
+              ((R.DIM2 -> Bool) -> R.DIM2 -> Bool) ->
+              IO (R.Array D R.DIM2 RGB8)
+morphology arr fun = doubleMorphology arr fun id
+
+doubleMorphology :: R.Array U R.DIM2 RGB8 ->
+                    ((R.DIM2 -> Bool) -> R.DIM2 -> Bool) -> 
+                    ((R.DIM2 -> Bool) -> R.DIM2 -> Bool) ->
+                    IO (R.Array D R.DIM2 RGB8)
+doubleMorphology arr fun1 fun2 = do
+  yArr <- R.computeUnboxedP $ R.map YCbCr.y arr
+  th <- Otsu.threshold yArr 256
+  binarized <- R.computeUnboxedP $ R.map (binarize 0 th) arr
+  afterMorph1 <- R.computeUnboxedP $ R.traverse binarized id fun1
+  afterMorph2 <- R.computeUnboxedP $ R.traverse afterMorph1 id fun2
+  return $ R.map (triple . boundedToBounded) afterMorph2
 

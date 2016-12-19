@@ -6,7 +6,7 @@ module PixelMaps (grayscale,
                   onlyY, onlyCb, onlyCr,
                   onlyH, onlyL, onlyS,
                   filterHue, filterSkin, filterRedEyes,
-                  binarize, binarize',
+                  binarize, binarize', binarizeY, binarizeY',
                   boundedToBounded, triple) where
 
 
@@ -87,17 +87,21 @@ filterRedEyes rgb
   | otherwise = Hls.fromHls (0, l, 0)
   where (h, l, s) = Hls.toHls rgb
 
-binarize :: (Bounded a) => Double -> Double -> RGB8 -> a
-binarize a b rgb
+binarizeY :: (Bounded a) => Double -> Double -> Double -> a
+binarizeY a b y
   | y >= a && y < b = minBound
   | otherwise = maxBound
-  where y = Ycbcr.y rgb
 
-binarize' :: (Bounded a) => Double -> Double -> RGB8 -> (a, a, a)
-binarize' a b rgb
+binarizeY' :: (Bounded a) => Double -> Double -> Double -> (a, a, a)
+binarizeY' a b y
   | y >= a && y < b  = (minBound, minBound, minBound)
   | otherwise = (maxBound, maxBound, maxBound)
-  where y = Ycbcr.y rgb
+
+binarize :: (Bounded a) => Double -> Double -> RGB8 -> a
+binarize a b rgb = binarizeY a b (Ycbcr.y rgb)
+
+binarize' :: (Bounded a) => Double -> Double -> RGB8 -> (a, a, a)
+binarize' a b rgb = binarizeY' a b (Ycbcr.y rgb)
 
 boundedToBounded :: (Bounded a, Eq a, Bounded b) => a -> b
 boundedToBounded a

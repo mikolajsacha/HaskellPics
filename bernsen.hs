@@ -9,7 +9,7 @@ import qualified Data.Vector.Unboxed as V
 import qualified Data.Vector.Unboxed.Mutable as Vm
 import qualified Data.List as L
 import PixelTraversals
-import Otsu
+import qualified Otsu
 import YCbCr as Ycbcr
 import Pixel
 
@@ -18,19 +18,23 @@ thresholds dim arr = R.traverse arr id f
 
 minMaxMean li = (L.minimum li +  L.maximum li) / 2.0
 
-binarize arr = R.traverse2 arr thArr const fun
-  where dim = R.extent arr
-        thArr = thresholds dim arr
-        fun lookUp1 lookUp2 coords =
+binarize :: R.Array U R.DIM2 RGB8 -> IO (R.Array D R.DIM2 RGB8)
+binarize arr = do
+  yArr <- R.computeUnboxedP $ R.map Ycbcr.y arr
+  let dim = R.extent yArr
+  thArr <- R.computeUnboxedP $ thresholds dim yArr
+  return $ R.traverse2 yArr thArr const fun
+  where fun lookUp1 lookUp2 coords =
           if lookUp1 coords >= lookUp2 coords then (maxBound, maxBound, maxBound) 
           else (0, 0, 0)
             
-mixedBinarize :: R.Array U R.DIM2 Double -> Double -> IO (R.Array U R.DIM2 RGB8)
-mixedBinarize yArr threshold = do
+mixedBinarize :: R.Array U R.DIM2 RGB8 -> Double -> IO (R.Array D R.DIM2 RGB8)
+mixedBinarize arr threshold = do
+  yArr <- R.computeUnboxedP $ R.map Ycbcr.y arr
   otsu_threshold <- Otsu.threshold yArr 256
   let dim = R.extent yArr
   thArr <- R.computeUnboxedP $ thresholds dim yArr
-  R.computeUnboxedP $ R.traverse2 yArr thArr const (fun otsu_threshold)
+  return $ R.traverse2 yArr thArr const (fun otsu_threshold)
   where fun otTh lookUp1 lookUp2 coords = 
           let diff = lookUp1 coords - lookUp2 coords in
             if abs diff > threshold then 

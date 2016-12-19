@@ -22,7 +22,7 @@ import JuicyRepa
 import YCbCr (toYcbcr, fromYcbcr, y)
 import qualified Otsu
 import qualified Bernsen
-import Morphology 
+import qualified Morphology 
 import qualified Criterion.Measurement as Cr
 
 outputPath = "output.png"
@@ -72,7 +72,12 @@ loadImg imgPath = do
   img <- readImg imgPath
   R.computeUnboxedP $ fromImage img
 
-runCommand :: R.Array U R.DIM2 RGB8 -> String -> [String] -> MaybeT IO (R.Array U R.DIM2 RGB8)
+saveArray :: R.Array D R.DIM2 RGB8 -> IO ()
+saveArray img = do
+  unboxed <- R.computeUnboxedP img
+  (savePngImage outputPath . ImageRGB8 . toImage) unboxed
+
+runCommand :: R.Array U R.DIM2 RGB8 -> String -> [String] -> MaybeT IO (R.Array D R.DIM2 RGB8)
 runCommand arr cmd args = do
   let n = R.extent arr
   case map toLower cmd of
@@ -90,77 +95,34 @@ runCommand arr cmd args = do
     "filter_hue" -> mapImage' (twoArgs filterHue)
     "filter_skin" -> mapImage' filterSkin
     "filter_red_eyes" -> mapImage' filterRedEyes
-    "average_rgb_filter" -> traverseImage' (averageFilter n)
-    "median_rgb_filter" -> traverseImage' (medianFilter n)
-    "average_y_filter" -> traverseMappedImage' (yAverageFilter n) toYcbcr fromYcbcr
-    "median_y_filter" -> traverseMappedImage' (yMedianFilter n) toYcbcr fromYcbcr
+    "average_rgb_filter" -> traverse (averageFilter n)
+    "median_rgb_filter" -> traverse (medianFilter n)
+    "average_y_filter" -> mapTraverse' (yAverageFilter n) toYcbcr fromYcbcr
+    "median_y_filter" -> mapTraverse' (yMedianFilter n) toYcbcr fromYcbcr
     "binarize" -> if length args > 2 then
                      mapImage' (twoArgs binarize)
                   else mapImage' (oneArg (binarize' 0))
-    "binarize_otsu" -> liftIO $ otsuBinarize arr
-    "binarize_bernsen" -> liftIO $ bernsenBinarize arr
-    "binarize_mixed" -> liftIO $ oneArg $ mixedBinarize arr
-    "erosion" -> liftIO $ morphology arr (twoArgs erosion n)
-    "dilation" -> liftIO $ morphology arr (twoArgs dilation n)
-    "rgb_erosion" -> traverseImage' (rgbMorphology (twoArgs erosion n))
-    "rgb_dilation" -> traverseImage' (rgbMorphology (twoArgs dilation n))
-    "opening" -> liftIO $ doubleMorphology arr (twoArgs erosion n) (twoArgs dilation n)
-    "closing" -> liftIO $ doubleMorphology arr (twoArgs dilation n) (twoArgs erosion n)
+    "binarize_otsu" -> liftIO $ Otsu.binarize arr
+    "binarize_bernsen" -> liftIO $ Bernsen.binarize arr
+    "binarize_mixed" -> liftIO $ oneArg $ Bernsen.mixedBinarize arr
+    "erosion" -> liftIO $ Morphology.morphology arr (twoArgs Morphology.erosion n)
+    "dilation" -> liftIO $ Morphology.morphology arr (twoArgs Morphology.dilation n)
+    "rgb_erosion" -> traverse (Morphology.rgbMorphology (twoArgs Morphology.erosion n))
+    "rgb_dilation" -> traverse (Morphology.rgbMorphology (twoArgs Morphology.dilation n))
+    "opening" -> liftIO $ Morphology.doubleMorphology arr (twoArgs Morphology.erosion n) (twoArgs Morphology.dilation n)
+    "closing" -> liftIO $ Morphology.doubleMorphology arr (twoArgs Morphology.dilation n) (twoArgs Morphology.erosion n)
     _ -> do liftIO $ putStrLn $ "Unknown command: " ++ cmd
             MaybeT $ return Nothing
-    where mapImage' f = liftIO $ mapImage arr f
-          traverseMappedImage' f map1 map2 = liftIO $ traverseImage arr f map1 map2
-          traverseImage' f = traverseMappedImage' f id id
+    where mapImage' f = liftIO $ return $ R.map f arr
+          mapTraverse' f map1 map2 = liftIO $ mapTraverse arr f map1 map2
+          traverse f = liftIO $ return $ R.traverse arr id f
           oneArg f = f (read $ head args)
           twoArgs f = f (read $ head args) (read $ args !! 1)
 
-saveArray :: R.Array U R.DIM2 RGB8 -> IO ()
-saveArray = savePngImage outputPath . ImageRGB8 . toImage
-
-mapImage :: (RU.Unbox a, RU.Unbox b) => R.Array U R.DIM2 a -> (a -> b) -> IO (R.Array U R.DIM2 b)
-mapImage arr fun = R.computeUnboxedP (R.map fun arr)
-
-traverseImage :: (RU.Unbox a) => R.Array U R.DIM2 RGB8 ->
-                 ((R.DIM2 -> a) -> R.DIM2 -> a) ->
-                 (RGB8 -> a) -> (a -> RGB8) -> IO (R.Array U R.DIM2 RGB8)
-traverseImage arr fun mapFun returnMapFun = do
-  mappedArr <- mapImage arr mapFun
+mapTraverse :: (RU.Unbox a) => R.Array U R.DIM2 RGB8 ->
+               ((R.DIM2 -> a) -> R.DIM2 -> a) ->
+               (RGB8 -> a) -> (a -> RGB8) -> IO (R.Array D R.DIM2 RGB8)
+mapTraverse arr fun mapFun returnMapFun = do
+  mappedArr <- R.computeUnboxedP $ R.map mapFun arr 
   traversedArr <- R.computeUnboxedP (R.traverse mappedArr id fun)
-  mapImage traversedArr returnMapFun
-
-otsuThreshold :: R.Array U R.DIM2 RGB8 -> IO Double
-otsuThreshold arr = do
-  yArr <- R.computeUnboxedP $ R.map YCbCr.y arr
-  Otsu.threshold yArr 256
-
-mixedBinarize :: R.Array U R.DIM2 RGB8 -> Double -> IO (R.Array U R.DIM2 RGB8)
-mixedBinarize arr threshold = do
-  yArr <- R.computeUnboxedP $ R.map YCbCr.y arr
-  Bernsen.mixedBinarize yArr threshold
-
-bernsenBinarize :: R.Array U R.DIM2 RGB8 -> IO (R.Array U R.DIM2 RGB8)
-bernsenBinarize arr = do
-  yArr <- R.computeUnboxedP $ R.map YCbCr.y arr
-  R.computeUnboxedP (Bernsen.binarize yArr)
-
-otsuBinarize :: R.Array U R.DIM2 RGB8 -> IO (R.Array U R.DIM2 RGB8)
-otsuBinarize arr = do
-  th <- otsuThreshold arr
-  R.computeUnboxedP (R.map (binarize' 0 th) arr)
-
-morphology :: R.Array U R.DIM2 RGB8 ->
-              ((R.DIM2 -> Bool) -> R.DIM2 -> Bool) ->
-              IO (R.Array U R.DIM2 RGB8)
-morphology arr fun = doubleMorphology arr fun id
-
-doubleMorphology :: R.Array U R.DIM2 RGB8 ->
-                    ((R.DIM2 -> Bool) -> R.DIM2 -> Bool) -> 
-                    ((R.DIM2 -> Bool) -> R.DIM2 -> Bool) ->
-                    IO (R.Array U R.DIM2 RGB8)
-doubleMorphology arr fun1 fun2 = do
-  th <- otsuThreshold arr
-  binarized <- R.computeUnboxedP $ R.map (binarize 0 th) arr
-  afterMorph1 <- R.computeUnboxedP $ R.traverse binarized id fun1
-  afterMorph2 <- R.computeUnboxedP $ R.traverse afterMorph1 id fun2
-  R.computeUnboxedP $ R.map (triple . boundedToBounded) afterMorph2
-
+  return $ R.map returnMapFun traversedArr 
