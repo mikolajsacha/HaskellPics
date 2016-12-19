@@ -82,3 +82,5 @@ rgb_erosion [imagePath] [shape] [windowSize] <-- apply erosion (on original RGB 
 rgb_dilation [imagePath] [shape] [windowSize] <-- apply dilation (on original RGB image)  
 opening [imagePath] [shape] [windowSize] <-- Dilation after erosion (otsu binarized)  
 closing [imagePath] [shape] [windowSize] <-- Erosion after dilation (otsu binarized)  
+
+convex_hull [imagePath] [maxIterations] <-- convex hull over binarized image

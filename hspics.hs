@@ -112,9 +112,8 @@ runCommand arr cmd args = do
     "rgb_dilation" -> traverse (Morphology.rgbMorphology (twoArgs Morphology.dilation n))
     "opening" -> liftIO $ Morphology.doubleMorphology arr (twoArgs Morphology.erosion n) (twoArgs Morphology.dilation n)
     "closing" -> liftIO $ Morphology.doubleMorphology arr (twoArgs Morphology.dilation n) (twoArgs Morphology.erosion n)
-    "hitandmiss_1" -> if not (null args) then
-                        liftIO $ oneArg $ HitAndMiss.hitAndMiss1 arr
-                      else liftIO $ HitAndMiss.hitAndMiss1 arr 100
+    "hitandmiss_1" -> hitAndMiss HitAndMiss.hitAndMiss1
+    "convex_hull" -> hitAndMiss HitAndMiss.convexHull
     _ -> do liftIO $ putStrLn $ "Unknown command: " ++ cmd
             MaybeT $ return Nothing
     where mapImage' f = liftIO $ return $ R.map f arr
@@ -122,6 +121,8 @@ runCommand arr cmd args = do
           traverse f = liftIO $ return $ R.traverse arr id f
           oneArg f = f (read $ head args)
           twoArgs f = f (read $ head args) (read $ args !! 1)
+          hitAndMiss f = if not (null args) then liftIO $ oneArg $ f arr
+                         else liftIO $ f arr 200
 
 mapTraverse :: (RU.Unbox a) => R.Array U R.DIM2 RGB8 ->
                ((R.DIM2 -> a) -> R.DIM2 -> a) ->
