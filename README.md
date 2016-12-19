@@ -76,7 +76,9 @@ binarize_mixed [imagePath] [threshold] <-- binarize image using mixed Otsu's and
 Meanings of arguments in the following commands:  
 shape = type of structural element. Can be: "Square", "Circle", "Cross" (write without quotation marks)  
 windowSize = non-negative integer. 0 means just 1 element, 1 = 9 elements (3x3), 2 = (5x5) etc.  
-erosion [imagePath] [shape] [windowSize] <-- apply erosion  
-dilation [imagePath] [shape] [windowSize] <-- apply dilation  
-opening [imagePath] [shape] [windowSize] <-- Dilation after erosion  
-closing [imagePath] [shape] [windowSize] <-- Erosion after dilation  
+erosion [imagePath] [shape] [windowSize] <-- apply erosion (on otsu binarized image) 
+dilation [imagePath] [shape] [windowSize] <-- apply dilation (on otsu binarized image) 
+rgb_erosion [imagePath] [shape] [windowSize] <-- apply erosion (on original RGB image)
+rgb_dilation [imagePath] [shape] [windowSize] <-- apply dilation (on original RGB image)
+opening [imagePath] [shape] [windowSize] <-- Dilation after erosion (otsu binarized)
+closing [imagePath] [shape] [windowSize] <-- Erosion after dilation (otsu binarized)
