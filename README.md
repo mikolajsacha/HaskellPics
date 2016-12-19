@@ -84,3 +84,5 @@ opening [imagePath] [shape] [windowSize] <-- Dilation after erosion (otsu binari
 closing [imagePath] [shape] [windowSize] <-- Erosion after dilation (otsu binarized)  
 
 convex_hull [imagePath] [maxIterations] <-- convex hull over binarized image
+skeleton [imagePath] [maxIterations] <-- find skeleton of the object (over binarized image)
+pruning [imagePath] [maxIterations] <-- pruning of the object (over binarized image)

@@ -1,4 +1,4 @@
-module HitAndMiss (hitAndMiss1, convexHull) where
+module HitAndMiss (hitAndMiss1, convexHull, skeleton, pruning) where
 
 import qualified Data.Array.Repa as R
 import qualified Data.Array.Repa.Repr.Unboxed as RU
@@ -41,7 +41,7 @@ runHitAndMiss addToOriginal arr n maxIterations currentIteration structs
       result <- R.computeUnboxedP $ R.traverse arr id (hitWindow addToOriginal structs n dim)
       equal <- R.equalsP result arr
       if equal then do
-        putStrLn $ "Finished Hit and Miss after " ++ show currentIteration ++ " iterations."
+        putStrLn $ "Finished Hit and Miss after " ++ show (currentIteration + 1) ++ " iterations."
         return result
       else runHitAndMiss addToOriginal result n maxIterations (currentIteration + 1) structs
 
@@ -67,3 +67,25 @@ convexHull = iterateHitAndMiss True 1 convexHullStructs
                             [X, X, Zero, One, Zero, X, One, One, One],
                             [Zero, X, One, X, Zero, One, X, One, One],
                             [Zero, X, X, X, Zero, One, One, One, One]]
+
+skeleton :: R.Array U R.DIM2 RGB8 -> Int -> IO (R.Array D R.DIM2 RGB8)
+skeleton = iterateHitAndMiss False 1 skeletonStructs
+  where skeletonStructs = [[Zero, Zero, Zero, X, One, X, One, One, One],
+                           [Zero, X, One, Zero, One, One, Zero, X, One],
+                           [One, One, One, X, One, X, Zero, Zero, Zero],
+                           [One, X, Zero, One, One, Zero, One, X, Zero],
+                           [X, Zero, Zero, One, One, Zero, X, One, X],
+                           [Zero, Zero, X, Zero, One, One, X, One, X],
+                           [X, One, X, Zero, One, One, Zero, Zero, X],
+                           [X, One, X, One, One, Zero, X, Zero, Zero]]
+
+pruning :: R.Array U R.DIM2 RGB8 -> Int -> IO (R.Array D R.DIM2 RGB8)
+pruning = iterateHitAndMiss False 1 pruningStructs
+  where pruningStructs = [[Zero, X, X, Zero, One, Zero, Zero, Zero, Zero],
+                          [X, Zero, Zero, X, One, Zero, Zero, Zero, Zero],
+                          [Zero, Zero, Zero, Zero, One, Zero, X, X, Zero],
+                          [Zero, Zero, Zero, Zero, One, X, Zero, Zero, X],
+                          [X, X, Zero, Zero, One, Zero, Zero, Zero, Zero],
+                          [Zero, Zero, Zero, X, One, Zero, X, Zero, Zero],
+                          [Zero, Zero, Zero, Zero, One, Zero, Zero, X, X],
+                          [Zero, Zero, X, Zero, One, X, Zero, Zero, Zero]]

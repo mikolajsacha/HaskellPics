@@ -114,6 +114,8 @@ runCommand arr cmd args = do
     "closing" -> liftIO $ Morphology.doubleMorphology arr (twoArgs Morphology.dilation n) (twoArgs Morphology.erosion n)
     "hitandmiss_1" -> hitAndMiss HitAndMiss.hitAndMiss1
     "convex_hull" -> hitAndMiss HitAndMiss.convexHull
+    "skeleton" -> hitAndMiss HitAndMiss.skeleton
+    "pruning" -> hitAndMiss HitAndMiss.pruning
     _ -> do liftIO $ putStrLn $ "Unknown command: " ++ cmd
             MaybeT $ return Nothing
     where mapImage' f = liftIO $ return $ R.map f arr
