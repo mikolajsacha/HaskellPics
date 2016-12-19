@@ -24,6 +24,7 @@ import YCbCr (toYcbcr, fromYcbcr, y)
 import qualified Otsu
 import qualified Bernsen
 import qualified Morphology 
+import qualified LutMorphology 
 import qualified HitAndMiss
 
 outputPath = "output.png"

@@ -1,4 +1,4 @@
-module Morphology (MorphShape, erosion, dilation, rgbMorphology, morphology, doubleMorphology) where
+module Morphology (MorphShape (Square, Circle, Cross), erosion, dilation, rgbMorphology, morphology, doubleMorphology) where
 
 import qualified Data.Array.Repa as R
 import Data.Array.Repa (U, D, Z (..), (:.)(..))
