@@ -16,6 +16,7 @@ import Data.Array.Repa (U, D, Z (..), (:.)(..))
 import qualified Data.Array.Repa.Repr.Unboxed as RU
 import qualified Data.Vector as V
 import Data.Char (toLower)
+import qualified Criterion.Measurement as Cr
 import PixelMaps
 import PixelTraversals
 import JuicyRepa
@@ -23,7 +24,7 @@ import YCbCr (toYcbcr, fromYcbcr, y)
 import qualified Otsu
 import qualified Bernsen
 import qualified Morphology 
-import qualified Criterion.Measurement as Cr
+import qualified HitAndMiss
 
 outputPath = "output.png"
 
@@ -99,7 +100,7 @@ runCommand arr cmd args = do
     "median_rgb_filter" -> traverse (medianFilter n)
     "average_y_filter" -> mapTraverse' (yAverageFilter n) toYcbcr fromYcbcr
     "median_y_filter" -> mapTraverse' (yMedianFilter n) toYcbcr fromYcbcr
-    "binarize" -> if length args > 2 then
+    "binarize" -> if length args > 1 then
                      mapImage' (twoArgs binarize)
                   else mapImage' (oneArg (binarize' 0))
     "binarize_otsu" -> liftIO $ Otsu.binarize arr
@@ -111,6 +112,9 @@ runCommand arr cmd args = do
     "rgb_dilation" -> traverse (Morphology.rgbMorphology (twoArgs Morphology.dilation n))
     "opening" -> liftIO $ Morphology.doubleMorphology arr (twoArgs Morphology.erosion n) (twoArgs Morphology.dilation n)
     "closing" -> liftIO $ Morphology.doubleMorphology arr (twoArgs Morphology.dilation n) (twoArgs Morphology.erosion n)
+    "hitandmiss_1" -> if not (null args) then
+                        liftIO $ oneArg $ HitAndMiss.hitAndMiss1 arr
+                      else liftIO $ HitAndMiss.hitAndMiss1 arr 100
     _ -> do liftIO $ putStrLn $ "Unknown command: " ++ cmd
             MaybeT $ return Nothing
     where mapImage' f = liftIO $ return $ R.map f arr

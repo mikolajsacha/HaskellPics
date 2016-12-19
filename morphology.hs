@@ -48,24 +48,6 @@ rgbMorphology fun f coords = (r, g, b)
         g = fun (snd' . f) coords
         b = fun (trd' . f) coords
 
-data StructElement = Zero | X | One deriving (Eq)
-instance Bounded StructElement where
-  minBound = Zero
-  maxBound = One
-
-fitsBasicShape :: (Eq a, Bounded a) => [StructElement] -> [a] -> Bool
-fitsBasicShape sli li = all (==True) (zipWith comp sli li)
-  where comp Zero el = el == maxBound
-        comp One el = el == maxBound
-        comp X el = True
-
-hitAndMiss :: (Eq a, Bounded a) => [StructElement] -> Int -> R.DIM2 -> (R.DIM2 -> a) -> R.DIM2 -> a
-hitAndMiss shape n dim f coords =
-  if fitsBasicShape shape surr then maxBound
-  else minBound
-    where surr = pixelSurrounding n dim f coords
-
-
 morphology :: R.Array U R.DIM2 RGB8 ->
               ((R.DIM2 -> Bool) -> R.DIM2 -> Bool) ->
               IO (R.Array D R.DIM2 RGB8)
