@@ -39,12 +39,11 @@ erosion = basicMorphology minimum
 dilation :: (Ord a, Bounded a) => MorphShape -> Int -> R.DIM2 -> (R.DIM2 -> a) -> R.DIM2 -> a
 dilation = basicMorphology maximum
 
-rgbMorphology :: (Ord a, Bounded a) =>
-  (R.DIM2 -> (R.DIM2 -> a) -> R.DIM2 -> a) -> R.DIM2 -> (R.DIM2 -> (a, a, a)) -> R.DIM2 -> (a, a, a) 
-rgbMorphology fun n f coords = (r, g, b)
-  where r = fun n (fst' . f) coords
-        g = fun n (snd' . f) coords
-        b = fun n (trd' . f) coords
+rgbMorphology :: (Ord a, Bounded a) => ((R.DIM2 -> a) -> R.DIM2 -> a) -> (R.DIM2 -> (a, a, a)) -> R.DIM2 -> (a, a, a) 
+rgbMorphology fun f coords = (r, g, b)
+  where r = fun (fst' . f) coords
+        g = fun (snd' . f) coords
+        b = fun (trd' . f) coords
 
 data StructElement = Zero | X | One deriving (Eq)
 instance Bounded StructElement where

@@ -22,8 +22,8 @@ The latter utilizes optimized and multithreaded array operations by Repa
 #### USAGE:
 
 Run the tool in command line like this:  
-hsimg.exe [command] [parameters]  
-e.g: hsimg.exe grayscale some_picture.jpg  
+hspics.exe [command] [parameters]  
+e.g: hspics.exe grayscale some_picture.jpg  
 
 For multithreading run with the following flags (recommended!):  
 hsimg.exe [command] [parameters] +RTS -N2 -H  

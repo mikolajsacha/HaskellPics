@@ -70,9 +70,9 @@ filterHls hr lr sr rgb =
   inRange hr h && inRange lr l && inRange sr s
   where (h, l, s) = Hls.toHls rgb
 
-filterHue :: Range -> RGB8 -> RGB8
-filterHue hr rgb
-  | filterHls hr (0, 360) (0, 360) rgb = rgb
+filterHue :: Double -> Double -> RGB8 -> RGB8
+filterHue l r rgb
+  | filterHls (l, r) (0, 360) (0, 360) rgb = rgb
   | otherwise = (0, 0, 0)
 
 filterSkin :: RGB8 -> RGB8
