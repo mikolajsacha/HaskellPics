@@ -21,7 +21,5 @@ cabal.project.local
 output.png
 *.exe
 pics/
-*.swp
-*.swo
-*.swn
+*.sw*
 *~

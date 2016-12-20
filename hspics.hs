@@ -109,10 +109,16 @@ runCommand arr cmd args = do
     "binarize_mixed" -> liftIO $ oneArg $ Bernsen.mixedBinarize arr
     "erosion" -> liftIO $ Morphology.morphology arr (twoArgs Morphology.erosion n)
     "dilation" -> liftIO $ Morphology.morphology arr (twoArgs Morphology.dilation n)
+    "lut_erosion" -> liftIO $ Morphology.morphology arr
+                     (LutMorphology.lutMorphology (twoArgs LutMorphology.erosionLut) (read $ args !! 1) n)
+    "lut_dilation" -> liftIO $ Morphology.morphology arr
+                     (LutMorphology.lutMorphology (twoArgs LutMorphology.dilationLut) (read $ args !! 1) n)
     "rgb_erosion" -> traverse (Morphology.rgbMorphology (twoArgs Morphology.erosion n))
     "rgb_dilation" -> traverse (Morphology.rgbMorphology (twoArgs Morphology.dilation n))
     "opening" -> liftIO $ Morphology.doubleMorphology arr (twoArgs Morphology.erosion n) (twoArgs Morphology.dilation n)
     "closing" -> liftIO $ Morphology.doubleMorphology arr (twoArgs Morphology.dilation n) (twoArgs Morphology.erosion n)
+    "lut_opening" -> liftIO $ Morphology.doubleMorphology arr (twoArgs Morphology.erosion n) (twoArgs Morphology.dilation n)
+    "lut_closing" -> liftIO $ Morphology.doubleMorphology arr (twoArgs Morphology.dilation n) (twoArgs Morphology.erosion n)
     "hitandmiss_1" -> hitAndMiss HitAndMiss.hitAndMiss1
     "convex_hull" -> hitAndMiss HitAndMiss.convexHull
     "skeleton" -> hitAndMiss HitAndMiss.skeleton
