@@ -1,25 +1,25 @@
-## Haskell Pics. An image processing tool written in Haskell.
+## Haskell Pics. An image processing tool written in Haskell.  
 
 A simple command line utility performing some basic operations on images.  
 Libraries used: JuicyPixels combined with Repa.  
-I made this program as a practice in Haskell and image processing. There might be some performance flaws and bugs.
+I made this program as a practice in Haskell and image processing. There might be some performance flaws and bugs.  
 
 
-#### REQUIREMENTS:
+#### REQUIREMENTS:  
 
-GHC compiler
-Packages: JuicyPixels, Repa, Criterion
-
-
-#### COMPILING:
-
-Compile using 'make' or manually by one of the following commands:
-ghc hspics.hs
-ghc -O -threaded -rtsopts --make hspics.hs
-The latter utilizes optimized and multithreaded array operations by Repa
+GHC compiler  
+Packages: JuicyPixels, Repa, Criterion  
 
 
-#### USAGE:
+#### COMPILING:  
+
+Compile using 'make' or manually by one of the following commands:  
+ghc hspics.hs  
+ghc -O -threaded -rtsopts --make hspics.hs  
+The latter utilizes optimized and multithreaded array operations by Repa  
+
+
+#### USAGE:  
 
 Run the tool in command line like this:  
 hspics.exe [command] [parameters]  
@@ -36,18 +36,18 @@ The output of processing is always placed in "output.png" file.
 ATTENTION: if you run program when there is already an "output.png" file, it will be overridden!  
 
 
-#### POSSIBLE COMMANDS:
+#### POSSIBLE COMMANDS:  
 
-##### Basic color transformations:
+##### Basic color transformations:  
 
 grayscale [imagePath]  
 only_red [imagePath]  
 only_blue [imagePath]  
 only_green [imagePath]  
 negative [imagePath]  
-sepia [imagePah] 
+sepia [imagePah]  
 
-##### YCbCr color coordinates: 
+##### YCbCr color coordinates:  
 only_y [imagePath]  
 only_cb [imagePath]  
 only_cr [imagePath]  
@@ -70,7 +70,7 @@ median_y_filter [imagePath]  <-- filter noises using moving median only on Y fro
 binarize [imagePath] [threshold] <-- binarize image using threshold (from 0 to 256)  
 binarize_otsu [imagePath] <-- binarize image using Otsu's method for calculating treshold  
 binarize_bernsen [imagePath] <-- binarize image using Bernsen's method for calculating treshold  
-binarize_mixed [imagePath] [threshold] <-- binarize image using mixed Otsu's and Bernsen's method with a given threshold
+binarize_mixed [imagePath] [threshold] <-- binarize image using mixed Otsu's and Bernsen's method with a given threshold  
 
 ##### Morphology:  
 Meanings of arguments in the following commands:  
@@ -80,13 +80,12 @@ erosion [imagePath] [shape] [windowSize] <-- apply erosion (on otsu binarized im
 dilation [imagePath] [shape] [windowSize] <-- apply dilation (on otsu binarized image)  
 opening [imagePath] [shape] [windowSize] <-- Dilation after erosion (otsu binarized)  
 closing [imagePath] [shape] [windowSize] <-- Erosion after dilation (otsu binarized)  
-lut_erosion [imagePath] [shape] [windowSize] <-- Same as above, but using LUT (advice: do not use with windowSize > 1)
-lut_dilation [imagePath] [shape] [windowSize] 
-lut_opening [imagePath] [shape] [windowSize] 
-lut_closing [imagePath] [shape] [windowSize] 
+lut_erosion [imagePath] [shape] [windowSize] <-- Same as above, but using LUT (advice: do not use with windowSize > 1)  
+lut_dilation [imagePath] [shape] [windowSize]  
+lut_opening [imagePath] [shape] [windowSize]  
+lut_closing [imagePath] [shape] [windowSize]  
 rgb_erosion [imagePath] [shape] [windowSize] <-- apply erosion (on original RGB image)  
 rgb_dilation [imagePath] [shape] [windowSize] <-- apply dilation (on original RGB image)  
-
-convex_hull [imagePath] [maxIterations] <-- convex hull over binarized image
-skeleton [imagePath] [maxIterations] <-- find skeleton of the object (over binarized image)
-pruning [imagePath] [maxIterations] <-- pruning of the object (over binarized image)
+convex_hull [imagePath] [maxIterations] <-- convex hull over binarized image  
+skeleton [imagePath] [maxIterations] <-- find skeleton of the object (over binarized image)  
+pruning [imagePath] [maxIterations] <-- pruning of the object (over binarized image)  
